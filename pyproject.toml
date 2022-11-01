@@ -5,9 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "shallowwater"
 version = "0.0.1"
-dependencies = [
-    "numpy",
-]
+
 [project.optional-dependencies]
 test = ["pytest"]
 
