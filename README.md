@@ -16,4 +16,5 @@ requirements.txt contains packages needed (to be used to note down packages bein
 + Initial shape: gaussian hump
 + Boundary contion: periodic 
 + Sample results:
-![1Dwaves](https://user-images.githubusercontent.com/112533493/199803037-7f1f1281-0fbf-41f3-88d2-94902f751b8a.png)
+![1Dwaves](https://user-images.githubusercontent.com/112533493/199803223-45be82d2-bd81-461a-851e-1a0bfc35f79d.png)
+
