@@ -38,22 +38,29 @@ from scipy.constants import g      #standard acceleration of gravity
 print ("Welcome to 1D-SWE")
 
 
+
+
+
+
 # Parameters setting
 domainLength = 20.   # meter
 xTotalNumber = 100
-timeLength = 4.     # second
-timeOutput = numpy.array([0.5, 1, 2, 1e8])
-
+timeLength = 6.     # second
+timeOutput = numpy.array([0.5, 1, 2,3,4,4.5, 1e8])
 
 dx = domainLength / xTotalNumber;
 xArray = numpy.linspace(-domainLength/2, domainLength/2 - dx, xTotalNumber)
 
 
 # Input 
-def inputInitialValue():
-    # initial gaussian hump
-    h_i = numpy.array([1 + 0.4 * math.exp(-1. * x**2) for x in xArray])
-    hu_i = numpy.array([0 for x_index in range(xTotalNumber)])       
+def inputInitialValue(initial):
+    if initial == 1:
+        # initial gaussian hump
+        h_i = numpy.array([1 + 0.4 * math.exp(-1. * x**2) for x in xArray])
+        hu_i = numpy.array([0 for x_index in range(xTotalNumber)])       
+    if initial == 2:
+        h_i =  numpy.array([1 + 0*0.4 * math.sin(2.0 * math.pi * x / domainLength ) for x in xArray])
+        hu_i = numpy.array([-0.4 * math.sin(2.0 * math.pi * x / domainLength ) for x in xArray]) 
     return h_i, hu_i
 
 # Simple output
@@ -65,8 +72,8 @@ def twoPlot(figNum, x, y1, y2):
     title2 = 'Momentum'
     xLimL = xArray.min();
     xLimR = xArray.max();
-    yLimL1 = 0
-    yLimR1 = 1.5 + 0.2
+    yLimL1 = 0.5
+    yLimR1 = 1.25
     
     
     
@@ -108,11 +115,30 @@ def centralDiff_Order2(f):
     dfdx[-1] = (f[0] - f[-2]) / (2. * dx)
     return dfdx
 
+# Euler forward
+def eulerForward(h, hu, dt, spaceDiff):
+    newh = h - dt * spaceDiff(hu)
+    newhu = hu - dt * spaceDiff((hu**2)/h+0.5*g*(h**2))
+    return newh, newhu
+
+# RK-2 method
+def rk2(h, hu, dt, spaceDiff):
+    
+        h_k1 = - dt * spaceDiff(hu)
+        hu_k1 = - dt *  spaceDiff((hu**2)/h+0.5*g*(h**2))
+        h_k2 = - dt * spaceDiff(hu + hu_k1 / 2.) 
+        hu_k2 = - dt  * spaceDiff(((hu + hu_k1 / 2.)**2)/(h+h_k1/2.)+0.5*g*((h+h_k1/2.)**2))
+        newh = h + h_k2
+        newhu = hu +  hu_k2
+        return newh, newhu
+    
+
+
 
 def SWE_1D():
 
     # Input initial value
-    h, hu = inputInitialValue();
+    h, hu = inputInitialValue(2);
     newh = 0 * h
     newhu = 0 * hu
     twoPlot(1,xArray, h, hu)
@@ -129,16 +155,15 @@ def SWE_1D():
             Index_output += 1
             Flag_output = 1
         
-        # Euler forward
-        newh = h - dt * centralDiff_Order2(hu)
-        newhu = hu - dt * centralDiff_Order2((hu**2)/h+0.5*g*(h**2))
+        # rk2
+        newh, newhu = rk2(h, hu, dt, centralDiff_Order2)
         t += dt
         h = newh
         hu = newhu
         
         # Output the file
         if Flag_output == 1:
-            numpy.savetxt('output.out', (xArray,h,hu))  
+            numpy.savetxt('output' + str(t) + '.out', (xArray,h,hu))  
             twoPlot(1,xArray, h, hu)
             print(f"=========Data at t={t} outputed===========")
            
