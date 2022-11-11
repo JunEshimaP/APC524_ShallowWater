@@ -1,23 +1,18 @@
 # -*- coding: utf-8 -*-
 """
 Revised on Thu Nov  3 11:05:28 2022
-
 @author: Zehua Liu
 """
 
 """
 Shallow water flow
 ==================
-
 Solve the one-dimensional shallow water equations:
-
 .. math::
     h_t + (hu)_x & = 0 \\
     (hu)_t + (hu^2 + \frac{1}{2}gh^2)_x & = 0.
-
 Here h is the total fluid column height, u is the velocity, and g is the gravitational constant.
 Ref: Conservative form in https://en.wikipedia.org/wiki/Shallow_water_equations
-
 Boundary contions:
     Periodic boundary contion
     
@@ -26,7 +21,6 @@ Initial conditions:
     
 Finite difference:
     Nodes on the edges
-
 |-|-|-|-
 """
 import numpy
