@@ -7,9 +7,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 
 class InteractiveUserInterface:
     def __init__(self, master):
-        # Build a container for this plot
-        frame = tk.Frame(master)
-
         # Create the tabs for the plotting
         tab_control = ttk.Notebook(master)
         input_tab = ttk.Frame(tab_control)
@@ -26,33 +23,125 @@ class InteractiveUserInterface:
         tab_control.pack(expand=1, fill="both")
 
     def input_tab_construction(self, tab):
-        # Widgets for this tab
-        increase_button = tk.Button(tab, text="Increase Slope", command=self.increase)
-        decrease_button = tk.Button(tab, text="Decrease Slope", command=self.decrease)
-        self.slope_slider = tk.Scale(
+        ### Widgets for this tab
+        # Input curve shape dropdown menu
+        input_curve_options = ("Sinusoid", "Gaussian", "Parabola")
+        self.selected_input_shape = tk.StringVar()
+        self.selected_input_shape.set("Sinusoid")
+        input_shape_menu = tk.OptionMenu(
+            tab, self.selected_input_shape, *input_curve_options
+        )
+        label_input_shape_menu = tk.Label(
+            tab, text="Select the shape for the input wave:"
+        )
+
+        # Numerical text boxes for generic numerical parameters
+        self.x_limit = tk.IntVar()
+        self.nx = tk.IntVar()
+        self.t_limit = tk.IntVar()
+        self.nt = tk.IntVar()
+
+        self.x_limit.set(10)
+        self.nx.set(100)
+        self.t_limit.set(10)
+        self.nt.set(100)
+
+        self.x_limit_entry = tk.Entry(tab, textvariable=self.x_limit)
+        label_x_limit = tk.Label(tab, text="X Limit")
+
+        self.nx_entry = tk.Entry(tab, textvariable=self.nx)
+        label_nx = tk.Label(tab, text="Number of Points in X")
+
+        self.t_limit_entry = tk.Entry(tab, textvariable=self.t_limit)
+        label_t_limit = tk.Label(tab, text="T Limit")
+
+        self.nt_entry = tk.Entry(tab, textvariable=self.nt)
+        label_nt = tk.Label(tab, text="Number of Points in T")
+
+        # Sliders for various curve parameters
+        self.frequency_slider = tk.Scale(
             tab,
-            label="Line Slope",
-            from_=-1,
-            to=1,
+            label="Frequency",
+            from_=0,
+            to=9,
             digits=2,
             resolution=0.1,
+            command=self.update_plot,
             orient=tk.HORIZONTAL,
-            command=self.update,
+            length=300,
         )
-        self.slope_slider.set(1)
+        self.frequency_slider.set(1)
 
-        fig = Figure()
-        ax = fig.add_subplot(111)
-        (self.line,) = ax.plot(range(10))
-        ax.set_xlim([0, 10])
-        ax.set_ylim([-10, 10])
-        self.canvas = FigureCanvasTkAgg(fig, master=tab)
+        self.amplitude_slider = tk.Scale(
+            tab,
+            label="Amplitude",
+            from_=-5,
+            to=5,
+            digits=2,
+            resolution=0.1,
+            command=self.update_plot,
+            orient=tk.HORIZONTAL,
+            length=300,
+        )
+        self.amplitude_slider.set(1)
 
-        # Packing widgets
-        increase_button.grid(row=1, column=0, padx=0, pady=0)
-        decrease_button.grid(row=2, column=0, padx=0, pady=0)
-        self.slope_slider.grid(row=3, column=0, padx=10, pady=10)
-        self.canvas.get_tk_widget().grid(row=0, column=1, rowspan=10)
+        self.phase_slider = tk.Scale(
+            tab,
+            label="Phase",
+            from_=0,
+            to=2 * np.pi,
+            digits=3,
+            resolution=0.05,
+            command=self.update_plot,
+            orient=tk.HORIZONTAL,
+            length=300,
+        )
+        self.phase_slider.set(0)
+
+        self.gaussian_shift_slider = tk.Scale(
+            tab,
+            label="Center of Gaussian",
+            from_=0,
+            to=self.x_limit.get(),
+            digits=3,
+            resolution=0.1,
+            command=self.update_plot,
+            orient=tk.HORIZONTAL,
+            length=300,
+        )
+        self.gaussian_shift_slider.set(5)
+
+        self.fig = Figure()
+        self.ax = self.fig.add_subplot(111)
+        i = np.linspace(0, 10, 100)
+        (self.curve,) = self.ax.plot(i, [np.sin(x) for x in i])
+        (self.baseline,) = self.ax.plot([0, self.x_limit.get()], [0, 0], "r:")
+        self.ax.set_xlim([0, 10])
+        self.ax.set_ylim([-5, 5])
+        self.plot_window = FigureCanvasTkAgg(self.fig, master=tab)
+
+        # Packing, only packs the initial widgets used for the sinusoidal input (default)
+        self.x_limit_entry.grid(row=0, column=1, padx=5)
+        label_x_limit.grid(row=0, column=0)
+        self.nx_entry.grid(row=1, column=1, padx=5)
+        label_nx.grid(row=1, column=0)
+        self.t_limit_entry.grid(row=2, column=1, padx=5)
+        label_t_limit.grid(row=2, column=0)
+        self.nt_entry.grid(row=3, column=1, padx=5)
+        label_nt.grid(row=3, column=0)
+
+        label_input_shape_menu.grid(row=5, column=0)
+        input_shape_menu.grid(row=5, column=1, padx=10)
+        self.frequency_slider.grid(row=6, column=0, padx=10, columnspan=2)
+        self.amplitude_slider.grid(row=7, column=0, padx=10, columnspan=2)
+        self.phase_slider.grid(row=8, column=0, padx=10, columnspan=2)
+        self.plot_window.get_tk_widget().grid(row=0, column=2, rowspan=15)
+
+        ###### Update Button #####
+        new_button = tk.Button(
+            tab, text="Update Plot", command=self.pack_input_tab_plot
+        )
+        new_button.grid(row=14, column=0, columnspan=2)
 
     def mesh_preview_tab_construction(self, tab):
         # Widgets for this tab
@@ -68,23 +157,70 @@ class InteractiveUserInterface:
         # Packing widgets
         message_to_user.grid(row=0, column=0)
 
-    def decrease(self):
-        # Decrease the slope of the line at the push of the button
-        x, y = self.line.get_data()
-        self.line.set_ydata(y - 0.2 * x)
-        self.canvas.draw()
+    def pack_input_tab_plot(self):
+        # Shared initialization
+        curve_type = self.selected_input_shape.get()
+        (x, y) = self.curve.get_data()
 
-    def increase(self):
-        # increase the slope of the line at the push of the button
-        x, y = self.line.get_data()
-        self.line.set_ydata(y + 0.2 * x)
-        self.canvas.draw()
+        # self.nx.set(self.nx.get())
+        # self.x_limit.set(self.x_limit.get())
+        # self.nt.set(self.nt.get())
+        # self.t_limit.set(self.t_limit.get())
 
-    def update(self, event):
-        x, y = self.line.get_data()
-        a = self.slope_slider.get()
-        self.line.set_ydata(a * x)
-        self.canvas.draw()
+        if len(x) != self.nx.get() or max(x) != self.x_limit.get():
+            x = np.linspace(0, self.x_limit.get(), self.nx.get())
+            self.curve.set_xdata(x)
+            self.ax.set_xlim((0, self.x_limit.get()))
+
+        if curve_type == "Sinusoid":
+            self.gaussian_shift_slider.grid_forget()
+            self.frequency_slider.grid(row=6, column=0, padx=10, columnspan=2)
+            self.phase_slider.grid(row=8, column=0, padx=10, columnspan=2)
+
+            amplitude = self.amplitude_slider.get()
+            frequency = self.frequency_slider.get()
+            phase = self.phase_slider.get()
+            self.curve.set_ydata(
+                [(amplitude * np.sin(frequency * element - phase)) for element in x]
+            )
+            self.plot_window.draw()
+
+        elif curve_type == "Gaussian":
+            self.frequency_slider.grid_forget()
+            self.phase_slider.grid_forget()
+            self.gaussian_shift_slider.grid(row=6, column=0, columnspan=2, padx=20)
+
+            shift = self.gaussian_shift_slider.get()
+            amplitude = self.amplitude_slider.get()
+            self.curve.set_ydata(
+                [amplitude * np.exp(-1.0 * (element - shift) ** 2) for element in x]
+            )
+
+            self.plot_window.draw()
+
+    def update_plot(self, event):
+        x, y = self.curve.get_data()
+        curve_type = self.selected_input_shape.get()
+
+        if curve_type == "Sinusoid":
+            x, y = self.curve.get_data()
+            amplitude = self.amplitude_slider.get()
+            frequency = self.frequency_slider.get()
+            phase = self.phase_slider.get()
+            self.curve.set_ydata(
+                [(amplitude * np.sin(frequency * i - phase)) for i in x]
+            )
+            self.plot_window.draw()
+
+        elif curve_type == "Gaussian":
+            x, y = self.curve.get_data()
+            amplitude = self.amplitude_slider.get()
+            shift = self.gaussian_shift_slider.get()
+            self.curve.set_ydata(
+                [amplitude * np.exp(-1.0 * (element - shift) ** 2) for element in x]
+            )
+
+            self.plot_window.draw()
 
 
 def initialize_window():
