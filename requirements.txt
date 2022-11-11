@@ -1,6 +1,6 @@
 numpy
 pytest
-tkinter
+tk
 matplotlib
 scipy
 tkVideoPlayer
