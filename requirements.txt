@@ -1,2 +1,6 @@
 numpy
 pytest
+tk
+matplotlib
+scipy
+tkVideoPlayer
