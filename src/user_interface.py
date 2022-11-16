@@ -3,6 +3,7 @@ from tkinter import ttk
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from SWE_1D import SWE_1D
 
 
 class InteractiveUserInterface:
