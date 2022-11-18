@@ -31,7 +31,6 @@ Finite difference:
 """
 import numpy
 import pylab
-import matplotlib
 import math
 from scipy.constants import g  # standard acceleration of gravity
 from numpy.typing import NDArray
@@ -49,7 +48,7 @@ def inputInitialValue(xArray: FArray, xTotalNumber: int) -> tuple[FArray, FArray
 
 
 # Simple output
-def twoPlot(figNum: int, x: FArray, y1: FArray, y2: FArray) -> None:
+def twoPlot(figNum: int, x: FArray, y1: FArray, y2: FArray, output_flag: int) -> None:
     xLabel = "x(m)"
     yLabel1 = "h(m)"
     yLabel2 = "hu(m^2/s)"
@@ -60,7 +59,7 @@ def twoPlot(figNum: int, x: FArray, y1: FArray, y2: FArray) -> None:
     yLimL1: float = 0.0
     yLimR1: float = 1.5 + 0.2
 
-    pylab.figure(figNum, figsize=(8, 3), dpi=300)
+    pylab.figure(figNum, figsize=(10,5))
     pylab.subplots_adjust(left=0.08, right=0.97, bottom=0.15, top=0.9, wspace=0.3)
 
     pylab.subplot(121)
@@ -70,7 +69,7 @@ def twoPlot(figNum: int, x: FArray, y1: FArray, y2: FArray) -> None:
     pylab.xlabel(xLabel, fontsize=6)
     pylab.ylabel(yLabel1, fontsize=6)
     pylab.xlim(xLimL, xLimR)
-    pylab.ylim(yLimL1, yLimR1)
+    # pylab.ylim(yLimL1, yLimR1)
     pylab.xticks(fontsize=6)
     pylab.yticks(fontsize=6)
     pylab.grid()
@@ -82,13 +81,15 @@ def twoPlot(figNum: int, x: FArray, y1: FArray, y2: FArray) -> None:
     pylab.xlabel(xLabel, fontsize=6)
     pylab.ylabel(yLabel2, fontsize=6)
     pylab.xlim(xLimL, xLimR)
-    # pylab.ylim(yLimL2, yLimR2)
     pylab.xticks(fontsize=6)
     pylab.yticks(fontsize=6)
     pylab.grid()
 
     pylab.draw()
-    pylab.savefig(title1 + "+" + title2, facecolor="w", edgecolor="w")
+    if output_flag == 1:
+        pylab.savefig(title1 + "+" + title2, facecolor="w", edgecolor="w")
+    
+    
 
 
 # Second order central difference
@@ -102,6 +103,10 @@ def centralDiff_Order2(f: FArray, dx: float) -> FArray:
 def SWE_1D(
     dx: float, xArray: FArray, timeLength: float, xTotalNumber: int, **kwargs
 ) -> None:
+    """
+    1D shallow water wave equations.
+    h = input height, hu = input momentum, time_output = output array
+    """
     # kwargs handling
     if ("h" in kwargs) == False or ("hu" in kwargs) == False:
         # Input initial value
@@ -116,7 +121,7 @@ def SWE_1D(
 
     newh: FArray = 0 * h
     newhu: FArray = 0 * hu
-    twoPlot(1, xArray, h, hu)
+    twoPlot(1, xArray, h, hu, 0)
 
     # Time marching
     Index_output: int = 0
@@ -145,10 +150,12 @@ def SWE_1D(
             numpy.savetxt(
                 "output" + str(t) + ".out", (h, xArray, t * numpy.ones(xTotalNumber))
             )
-            twoPlot(1, xArray, h, hu)
+            twoPlot(1, xArray, h, hu, Flag_output)
             print(f"=========Data at t={t} outputed===========")
 
         Flag_output = 0
+
+    return pylab.gcf()
 
 
 if __name__ == "__main__":
@@ -164,3 +171,4 @@ if __name__ == "__main__":
     )
 
     SWE_1D(dx, xArray, timeLength, xTotalNumber, time_output=timeOutput)
+    

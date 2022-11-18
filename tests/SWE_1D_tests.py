@@ -1,8 +1,4 @@
-import sys
-
-sys.path.insert(0, "../src/")
-import SWE_1D
-
+import src.SWE_1D as SWE_1D
 import filecmp
 import os
 import numpy
@@ -28,9 +24,9 @@ def test_of_outputs():
     )
     os.remove("Height+Momentum.png")
 
-    assert filecmp.cmp("../output0.5.out", "output0.5.out", shallow=False)
-    assert filecmp.cmp("../output1.0.out", "output1.0.out", shallow=False)
-    assert filecmp.cmp("../output2.0.out", "output2.0.out", shallow=False)
+    assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output0.5.out", "output0.5.out", shallow=False)
+    assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output1.0.out", "output1.0.out", shallow=False)
+    assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output2.0.out", "output2.0.out", shallow=False)
     os.remove("output0.5.out")
     os.remove("output1.0.out")
     os.remove("output2.0.out")

@@ -1,32 +1,41 @@
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
+from matplotlib.pylab import close
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from SWE_1D import SWE_1D
+from SWE_1D import SWE_1D, inputInitialValue
 
 
 class InteractiveUserInterface:
     def __init__(self, master):
+        self.root = master
+        # Menu bar
+        menu_bar = tk.Menu(master)
+        file_menu = tk.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label="Exit", command = master.destroy)
+        menu_bar.add_cascade(label="File", menu=file_menu)
+
+        master.config(menu=menu_bar)
         # Create the tabs for the plotting
         tab_control = ttk.Notebook(master)
         input_tab = ttk.Frame(tab_control)
-        mesh_preview_tab = ttk.Frame(tab_control)
+        self.numerical_simulation_tab = ttk.Frame(tab_control)
         output_tab = ttk.Frame(tab_control)
 
         tab_control.add(input_tab, text="Input")
-        tab_control.add(mesh_preview_tab, text="Mesh Preview")
+        tab_control.add(self.numerical_simulation_tab, text="Numerical Simulation")
         tab_control.add(output_tab, text="Output")
 
         self.input_tab_construction(input_tab)
-        self.mesh_preview_tab_construction(mesh_preview_tab)
+        self.numerical_simulation_tab_construction(self.numerical_simulation_tab)
         self.output_tab_construction(output_tab)
         tab_control.pack(expand=1, fill="both")
 
     def input_tab_construction(self, tab):
         ### Widgets for this tab
         # Input curve shape dropdown menu
-        input_curve_options = ("Sinusoid", "Gaussian", "Parabola")
+        input_curve_options = ("Sinusoid", "Gaussian",)
         self.selected_input_shape = tk.StringVar()
         self.selected_input_shape.set("Sinusoid")
         input_shape_menu = tk.OptionMenu(
@@ -112,6 +121,12 @@ class InteractiveUserInterface:
         )
         self.gaussian_shift_slider.set(5)
 
+        # Button to update the plot for inputs
+        update_plot_button = tk.Button(
+            tab, text="Update Plot", command=self.pack_input_tab_plot
+        )
+
+        # Plot figure
         self.fig = Figure()
         self.ax = self.fig.add_subplot(111)
         i = np.linspace(0, 10, 100)
@@ -119,6 +134,8 @@ class InteractiveUserInterface:
         (self.baseline,) = self.ax.plot([0, self.x_limit.get()], [0, 0], "r:")
         self.ax.set_xlim([0, 10])
         self.ax.set_ylim([-5, 5])
+        self.ax.set_xlabel("Simulation Domain (x) [m]")
+        self.ax.set_ylabel("Water Height (h) [m]")
         self.plot_window = FigureCanvasTkAgg(self.fig, master=tab)
 
         # Packing, only packs the initial widgets used for the sinusoidal input (default)
@@ -137,19 +154,17 @@ class InteractiveUserInterface:
         self.amplitude_slider.grid(row=7, column=0, padx=10, columnspan=2)
         self.phase_slider.grid(row=8, column=0, padx=10, columnspan=2)
         self.plot_window.get_tk_widget().grid(row=0, column=2, rowspan=15)
+        update_plot_button.grid(row=14, column=0, columnspan=2)
 
-        ###### Update Button #####
-        new_button = tk.Button(
-            tab, text="Update Plot", command=self.pack_input_tab_plot
-        )
-        new_button.grid(row=14, column=0, columnspan=2)
-
-    def mesh_preview_tab_construction(self, tab):
+    def numerical_simulation_tab_construction(self, tab):
         # Widgets for this tab
-        message_to_user = tk.Label(tab, text="Work in progress!")
+        run_default_simulation_button = tk.Button(tab, text="Run default simulation", command = self.run_default_simulation)
+        run_custom_simulation_buttom = tk.Button(tab, text="Run custom simulation", command = self.run_custom_simulation)
+
 
         # Packing widgets
-        message_to_user.grid(row=0, column=0)
+        run_default_simulation_button.grid(row=0,column=0, columnspan=2)
+        run_custom_simulation_buttom.grid(row=1, column=0, columnspan=2)
 
     def output_tab_construction(self, tab):
         # Widgets for this tab
@@ -184,7 +199,6 @@ class InteractiveUserInterface:
             self.curve.set_ydata(
                 [(amplitude * np.sin(frequency * element - phase)) for element in x]
             )
-            self.plot_window.draw()
 
         elif curve_type == "Gaussian":
             self.frequency_slider.grid_forget()
@@ -197,7 +211,8 @@ class InteractiveUserInterface:
                 [amplitude * np.exp(-1.0 * (element - shift) ** 2) for element in x]
             )
 
-            self.plot_window.draw()
+        self.baseline.set_xdata([0, self.x_limit.get()])        
+        self.plot_window.draw()
 
     def update_plot(self, event):
         x, y = self.curve.get_data()
@@ -222,6 +237,49 @@ class InteractiveUserInterface:
             )
 
             self.plot_window.draw()
+
+    def run_custom_simulation(self):
+        # Execute 1D shallow water wave equations
+        x, h_i = self.curve.get_data()
+        nx = self.nx.get()
+        time_length = self.t_limit.get()
+        timeOutput = np.array([0.5, 1, 2, 1e8])
+
+        hu_i = np.zeros(np.shape(x))
+        h_i = np.array(h_i) + 2
+        x = np.array(x)
+
+        dx = self.x_limit.get() / nx
+
+        fig = SWE_1D(
+        dx, x, time_length, nx, h=h_i, hu=hu_i, time_output=timeOutput
+        )
+
+        temp_window = FigureCanvasTkAgg(fig, master = self.numerical_simulation_tab)
+        temp_window.get_tk_widget().grid(row=0, column = 2, rowspan=15)
+        close('all')
+
+    def run_default_simulation(self):
+        timeOutput=np.array([0.5, 1, 2, 1e8])
+
+        domainLength: float = 20.0  # meter
+        xTotalNumber: int = 100
+        timeLength: float = 4.0  # second
+        timeOutput = np.array([0.5, 1, 2, 1e8])
+
+        dx: float = domainLength / xTotalNumber
+        xArray = np.linspace(-domainLength / 2, domainLength / 2 - dx, xTotalNumber)
+        h_i, hu_i = inputInitialValue(xArray, xTotalNumber)
+
+
+        fig = SWE_1D(
+        dx, xArray, timeLength, xTotalNumber, h=h_i, hu=hu_i, time_output=timeOutput
+        )
+
+        temp_window = FigureCanvasTkAgg(fig, master = self.numerical_simulation_tab)
+        temp_window.get_tk_widget().grid(row=0, column = 2, rowspan=15)
+        close('all')
+
 
 
 def initialize_window():
