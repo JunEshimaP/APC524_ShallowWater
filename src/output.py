@@ -130,7 +130,8 @@ class InteractiveOutput:
 
     # updates current time, used to update slider
     def update_slider(self, event):
-        self.currenttime.set(self.videoplayer.current_duration())
+        # the second is a bit glichy, so have the display in integer seconds
+        self.currenttime.set(round(self.videoplayer.current_duration()))
 
     # change video player to the point at which the user specifies
     def settime_slider(self, event):
