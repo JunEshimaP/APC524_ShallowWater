@@ -20,10 +20,10 @@ Ref: Conservative form in https://en.wikipedia.org/wiki/Shallow_water_equations
 
 Boundary contions:
     Periodic boundary contion
-    
+
 Initial conditions:
     Gaussian hump in the middle
-    
+
 Finite difference:
     Nodes on the edges
 
