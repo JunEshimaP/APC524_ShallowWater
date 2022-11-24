@@ -89,7 +89,7 @@ class makemovie:
 
         # set up the writer
         # note: need to have ffmpeg installed.
-        writervideo = animation.FFMpegWriter(fps=1)
+        writervideo = animation.FFMpegWriter(fps=30)
         self.ani.save(r"sample_movies/sample_generated.mp4", writer=writervideo)
 
 

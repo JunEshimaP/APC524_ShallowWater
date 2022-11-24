@@ -119,8 +119,8 @@ class InteractiveOutput:
         self.videoplayer.bind("<<SecondChanged>>", self.update_slider)
 
         # Packing widgets
-        tab.rowconfigure([0, 1, 2, 3, 4, 5], minsize=50)
-        tab.columnconfigure([0, 1, 2], minsize=50)
+        tab.rowconfigure([0, 1, 2, 3, 4, 5], minsize=100)
+        tab.columnconfigure([0, 1, 2], minsize=200)
         label.grid(row=1, column=0, columnspan=3, sticky="ew")
         self.videoplayer.grid(row=2, column=0, rowspan=3, columnspan=3, sticky="nsew")
         timefromstartlabel.grid(row=5, column=0, padx=10, pady=10)
@@ -159,7 +159,7 @@ def initialize_window():
 def main():
     root = initialize_window()
     app = InteractiveOutput(
-        root, r"sample_movies/sample.mp4", r"sample_movies/sampleinfo.txt"
+        root, r"sample_movies/sample_generated.mp4", r"sample_movies/sampleinfo.txt"
     )
     root.mainloop()
 
