@@ -8,6 +8,39 @@ import math
 # sample_movies/sample.mp4
 # infofile contains information on frame rate, duration etc.
 class InteractiveOutput:
+    """Sets up an interactive output
+
+    Input
+    -----
+    master : tk window
+        This is the window in which the output will be given
+
+    moviefilename : string
+        This is the location and name of the output movie (.mp4 file)
+
+    infofilename : string
+        This is the location and name of the information file with information
+        on FPS and duration of the movie (.txt file)
+
+    Methods
+    -------
+    __init__ :
+        initialise values
+
+    update_slider :
+        update the time value of the slider
+
+    settime_slider :
+        change the progress of the movie based on input by the user
+
+    play_pause :
+        set up the play/pause button
+
+    output_tab_construction :
+        set up the tab by inserting labels, buttons, interactive sliders
+        and play the move made in moviemaker.py
+    """
+
     def __init__(self, master, moviefilename, infofilename):
         # Build a container for this plot
         frame = tk.Frame(master)

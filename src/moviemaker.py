@@ -8,8 +8,35 @@ import matplotlib.animation as animation
 
 
 class makemovie:
-    """
-    In order to make a movie, need filename and N, the number of spatial points
+    """Sets up an interactive output
+
+    Input
+    -----
+    filename : string
+        This is the location and name of the output of SWE_1D.py (.txt file)
+
+    N : int
+        This is the number intervals in spatial coordinates
+
+    Methods
+    -------
+    __init__ :
+        initialise values
+
+    readvalues :
+        read out the output from SWE_1D.py
+
+    initplot :
+        configure the plot
+
+    update :
+        update plot every frame
+
+    createanimattion :
+        create the animation using matplotlib.animation
+
+    saveanimation :
+        save the animation into .mp4
     """
 
     def __init__(self, filename, N):
@@ -22,7 +49,7 @@ class makemovie:
     # read out values from .txt file
     def readvalues(self):
         self.h, self.x, self.t = np.loadtxt(
-            self.filename, delimiter=",", usecols=(0, 1, 2), unpack=True
+            self.filename, delimiter=" ", usecols=(0, 1, 2), unpack=True
         )
         self.numberofvalues = self.h.size
         self.numberoftimesteps = int(self.numberofvalues / self.N)
