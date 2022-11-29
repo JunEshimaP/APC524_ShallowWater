@@ -24,9 +24,6 @@ def test_of_outputs():
     )
     os.remove("Height+Momentum.png")
 
-    assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output0.5.out", "output0.5.out", shallow=False)
-    assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output1.0.out", "output1.0.out", shallow=False)
-    assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output2.0.out", "output2.0.out", shallow=False)
-    os.remove("output0.5.out")
-    os.remove("output1.0.out")
-    os.remove("output2.0.out")
+    assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output.out", "output.out", shallow=False)
+    os.remove("output.out")
+
