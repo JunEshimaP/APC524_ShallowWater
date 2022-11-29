@@ -32,6 +32,7 @@ Finite difference:
 import numpy
 import pylab
 import math
+import os
 from scipy.constants import g  # standard acceleration of gravity
 from numpy.typing import NDArray
 
@@ -127,6 +128,7 @@ def SWE_1D(
     Index_output: int = 0
     Flag_output: int = 0
     t: float = 0.0
+    os.remove('output.out')
     f=open('output.out','a')
     while t < timeLength:
         dt: float = 0.1 * dx / math.sqrt(g * h.max())
