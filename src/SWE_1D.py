@@ -102,7 +102,7 @@ def centralDiff_Order2(f: FArray, dx: float) -> FArray:
 
 
 def SWE_1D(
-    dx: float, xArray: FArray, timeLength: float, xTotalNumber: int, **kwargs
+    dx: float, xArray: FArray, timeLength: float, xTotalNumber: int, FPS: int, **kwargs
 ) -> None:
     """
     1D shallow water wave equations.
@@ -117,11 +117,13 @@ def SWE_1D(
         h = kwargs["h"]
         hu = kwargs["hu"]
 
-    if "time_output" in kwargs:
-        timeOutput = kwargs["time_output"]
+    #if "time_output" in kwargs:
+        #timeOutput = kwargs["time_output"]
 
     newh: FArray = 0 * h
     newhu: FArray = 0 * hu
+    timeOutput: FArray = numpy.arange(1.0/FPS, timeLength + 1.0/FPS, 1.0/FPS)
+    timeOutput = numpy.append(timeOutput,1e8)
     twoPlot(1, xArray, h, hu, 0)
 
     # Time marching
@@ -130,11 +132,14 @@ def SWE_1D(
     t: float = 0.0
     os.remove('output.out')
     f=open('output.out','a')
+    numpy.savetxt(
+        f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
+    )
+    print(f"=========Data at t={t} outputed===========")
     while t < timeLength:
-        dt: float = 0.1 * dx / math.sqrt(g * h.max())
+        dt: float = min(0.01 * dx / math.sqrt(g * h.max()), 0.5/FPS)
         if (
-            "time_output" in kwargs
-            and t + dt > timeOutput[Index_output]
+            t + dt > timeOutput[Index_output]
             and t < timeOutput[Index_output]
         ):
             dt = timeOutput[Index_output] - t
@@ -153,7 +158,7 @@ def SWE_1D(
             numpy.savetxt(
                 f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
             )
-            twoPlot(1, xArray, h, hu, Flag_output)
+            #twoPlot(1, xArray, h, hu, Flag_output)
             print(f"=========Data at t={t} outputed===========")
 
         Flag_output = 0
@@ -168,12 +173,13 @@ if __name__ == "__main__":
     domainLength: float = 20.0  # meter
     xTotalNumber: int = 100
     timeLength: float = 4.0  # second
-    timeOutput: FArray = numpy.array([0.5, 1, 2, 1e8])
+    FPS: int = 20
+    #timeOutput: FArray = numpy.array([0.5, 1, 2, 1e8])
 
     dx: float = domainLength / xTotalNumber
     xArray: FArray = numpy.linspace(
         -domainLength / 2, domainLength / 2 - dx, xTotalNumber
     )
 
-    SWE_1D(dx, xArray, timeLength, xTotalNumber, time_output=timeOutput)
+    SWE_1D(dx, xArray, timeLength, xTotalNumber, FPS)
     
