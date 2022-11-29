@@ -354,8 +354,8 @@ class InteractiveUserInterface:
 
         if curve_type == "Sinusoid":
             self.gaussian_shift_slider.grid_forget()
-            self.frequency_slider.grid(row=6, column=0, padx=10, columnspan=2)
-            self.phase_slider.grid(row=8, column=0, padx=10, columnspan=2)
+            self.frequency_slider.grid(row=7, column=0, padx=10, columnspan=2)
+            self.phase_slider.grid(row=9, column=0, padx=10, columnspan=2)
 
             amplitude = self.amplitude_slider.get()
             frequency = self.frequency_slider.get()
@@ -367,7 +367,7 @@ class InteractiveUserInterface:
         elif curve_type == "Gaussian":
             self.frequency_slider.grid_forget()
             self.phase_slider.grid_forget()
-            self.gaussian_shift_slider.grid(row=6, column=0, columnspan=2, padx=20)
+            self.gaussian_shift_slider.grid(row=7, column=0, columnspan=2, padx=20)
 
             shift = self.gaussian_shift_slider.get()
             amplitude = self.amplitude_slider.get()
