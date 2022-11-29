@@ -5,6 +5,96 @@ from matplotlib.pylab import close
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from SWE_1D import SWE_1D, inputInitialValue
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
+import math
+from tkVideoPlayer import *
+
+
+class makemovie:
+    """Sets up an interactive output
+
+    Input
+    -----
+    filename : string
+        This is the location and name of the output of SWE_1D.py (.txt file)
+
+    N : int
+        This is the number intervals in spatial coordinates
+
+    Methods
+    -------
+    __init__ :
+        initialise values
+
+    readvalues :
+        read out the output from SWE_1D.py
+
+    initplot :
+        configure the plot
+
+    update :
+        update plot every frame
+
+    createanimattion :
+        create the animation using matplotlib.animation
+
+    saveanimation :
+        save the animation into .mp4
+    """
+
+    def __init__(self, filename, N):
+        self.filename = filename
+        self.N = N
+        # set up matplotlib as in matplotlib.animation documentation
+        self.plottedgraphfig, self.plottedgraphfigax = plt.subplots()
+        (self.curve,) = self.plottedgraphfigax.plot([], [])
+
+    # read out values from .txt file
+    def readvalues(self):
+        self.h, self.x, self.t = np.loadtxt(
+            self.filename, delimiter=" ", usecols=(0, 1, 2), unpack=True
+        )
+        self.numberofvalues = self.h.size
+        self.numberoftimesteps = int(self.numberofvalues / self.N)
+
+    #   initialise the plot
+    def initplot(self):
+        # set axis
+        self.plottedgraphfigax.set_xlim(0, self.N - 1)
+        self.plottedgraphfigax.set_ylim(0, 10)
+        return (self.curve,)
+
+    # update the plot every frame
+    def update(self, frame):
+        x_val = []
+        y_val = []
+        for i in range(self.N):
+            x_val.append(self.x[i + frame * self.N])
+            y_val.append(self.h[i + frame * self.N])
+        self.curve.set_data(x_val, y_val)
+        return (self.curve,)
+
+    # create animation
+    def createanimation(self):
+        self.readvalues()
+
+        self.ani = animation.FuncAnimation(
+            self.plottedgraphfig,
+            self.update,
+            frames=range(self.numberoftimesteps),
+            init_func=self.initplot,
+            blit=True,
+        )
+
+    # save the animaton
+    def saveanimation(self):
+        self.createanimation()
+
+        # set up the writer
+        # note: need to have ffmpeg installed.
+        writervideo = animation.FFMpegWriter(fps=30)
+        self.ani.save(r"sample_movies/sample_generated.mp4", writer=writervideo)
 
 
 class InteractiveUserInterface:
@@ -13,8 +103,13 @@ class InteractiveUserInterface:
         # Menu bar
         menu_bar = tk.Menu(master)
         file_menu = tk.Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="Exit", command = master.destroy)
+        file_menu.add_command(label="Exit", command=master.destroy)
         menu_bar.add_cascade(label="File", menu=file_menu)
+
+        # need a fix for this (temporary)
+        self.FPS = 30
+        self.totduration = 8.0
+        self.moviefilename = r"sample_movies/sample_generated.mp4"
 
         master.config(menu=menu_bar)
         # Create the tabs for the plotting
@@ -35,7 +130,10 @@ class InteractiveUserInterface:
     def input_tab_construction(self, tab):
         ### Widgets for this tab
         # Input curve shape dropdown menu
-        input_curve_options = ("Sinusoid", "Gaussian",)
+        input_curve_options = (
+            "Sinusoid",
+            "Gaussian",
+        )
         self.selected_input_shape = tk.StringVar()
         self.selected_input_shape.set("Sinusoid")
         input_shape_menu = tk.OptionMenu(
@@ -158,20 +256,79 @@ class InteractiveUserInterface:
 
     def numerical_simulation_tab_construction(self, tab):
         # Widgets for this tab
-        run_default_simulation_button = tk.Button(tab, text="Run default simulation", command = self.run_default_simulation)
-        run_custom_simulation_buttom = tk.Button(tab, text="Run custom simulation", command = self.run_custom_simulation)
-
+        run_default_simulation_button = tk.Button(
+            tab, text="Run default simulation", command=self.run_default_simulation
+        )
+        run_custom_simulation_buttom = tk.Button(
+            tab, text="Run custom simulation", command=self.run_custom_simulation
+        )
 
         # Packing widgets
-        run_default_simulation_button.grid(row=0,column=0, columnspan=2)
+        run_default_simulation_button.grid(row=0, column=0, columnspan=2)
         run_custom_simulation_buttom.grid(row=1, column=0, columnspan=2)
 
     def output_tab_construction(self, tab):
-        # Widgets for this tab
-        message_to_user = tk.Label(tab, text="Work in progress!")
+
+        # bar with some text (maybe put in values of physical variables etc)
+        label = tk.Label(tab, text=f"Output(FPS = {self.FPS}):", fg="white", bg="black")
+        self.pp_btn = tk.Button(tab, text="play", command=self.play_pause, width=5)
+
+        # video player
+        self.videoplayer = TkinterVideo(master=tab, scaled=True)
+        self.videoplayer.load(self.moviefilename)
+        self.videoplayer.pause()
+
+        # variable to store the current time of the video
+        self.currenttime = tk.DoubleVar(tab)
+
+        # slider
+        self.slope_slider = tk.Scale(
+            tab,
+            variable=self.currenttime,
+            from_=0,
+            to=self.totduration,
+            digits=1,
+            resolution=1,
+            orient=tk.HORIZONTAL,
+            command=self.settime_slider,
+            tickinterval=math.floor(self.totduration / 4),
+            showvalue=0,
+        )
+
+        timefromstartlabel = tk.Label(tab, textvariable=self.currenttime)
+        totdurationlabel = tk.Label(tab, text=str(self.totduration))
+
+        self.videoplayer.bind("<<SecondChanged>>", self.update_slider)
 
         # Packing widgets
-        message_to_user.grid(row=0, column=0)
+        tab.rowconfigure([0, 1, 2, 3, 4, 5], minsize=100)
+        tab.columnconfigure([0, 1, 2], minsize=200)
+        label.grid(row=1, column=0, columnspan=3, sticky="ew")
+        self.videoplayer.grid(row=2, column=0, rowspan=3, columnspan=3, sticky="nsew")
+        timefromstartlabel.grid(row=5, column=0, padx=10, pady=10)
+        self.slope_slider.grid(row=5, column=1, padx=10, pady=10)
+        totdurationlabel.grid(row=5, column=2, padx=10, pady=10)
+        self.pp_btn.grid(row=6, column=1)
+
+    # updates current time, used to update slider
+    def update_slider(self, event):
+        # the second is a bit glichy, so have the display in integer seconds
+        self.currenttime.set(round(self.videoplayer.current_duration()))
+
+    # change video player to the point at which the user specifies
+    def settime_slider(self, event):
+        a = self.slope_slider.get()
+        self.videoplayer.seek(int(a))
+
+    # play and pause the video
+    def play_pause(self):
+        if self.videoplayer.is_paused():
+            self.videoplayer.play()
+            self.pp_btn["text"] = "pause"
+
+        else:
+            self.videoplayer.pause()
+            self.pp_btn["text"] = "play"
 
     def pack_input_tab_plot(self):
         # Shared initialization
@@ -211,7 +368,7 @@ class InteractiveUserInterface:
                 [amplitude * np.exp(-1.0 * (element - shift) ** 2) for element in x]
             )
 
-        self.baseline.set_xdata([0, self.x_limit.get()])        
+        self.baseline.set_xdata([0, self.x_limit.get()])
         self.plot_window.draw()
 
     def update_plot(self, event):
@@ -251,16 +408,14 @@ class InteractiveUserInterface:
 
         dx = self.x_limit.get() / nx
 
-        fig = SWE_1D(
-        dx, x, time_length, nx, h=h_i, hu=hu_i, time_output=timeOutput
-        )
+        fig = SWE_1D(dx, x, time_length, nx, h=h_i, hu=hu_i, time_output=timeOutput)
 
-        temp_window = FigureCanvasTkAgg(fig, master = self.numerical_simulation_tab)
-        temp_window.get_tk_widget().grid(row=0, column = 2, rowspan=15)
-        close('all')
+        temp_window = FigureCanvasTkAgg(fig, master=self.numerical_simulation_tab)
+        temp_window.get_tk_widget().grid(row=0, column=2, rowspan=15)
+        close("all")
 
     def run_default_simulation(self):
-        timeOutput=np.array([0.5, 1, 2, 1e8])
+        timeOutput = np.array([0.5, 1, 2, 1e8])
 
         domainLength: float = 20.0  # meter
         xTotalNumber: int = 100
@@ -271,15 +426,13 @@ class InteractiveUserInterface:
         xArray = np.linspace(-domainLength / 2, domainLength / 2 - dx, xTotalNumber)
         h_i, hu_i = inputInitialValue(xArray, xTotalNumber)
 
-
         fig = SWE_1D(
-        dx, xArray, timeLength, xTotalNumber, h=h_i, hu=hu_i, time_output=timeOutput
+            dx, xArray, timeLength, xTotalNumber, h=h_i, hu=hu_i, time_output=timeOutput
         )
 
-        temp_window = FigureCanvasTkAgg(fig, master = self.numerical_simulation_tab)
-        temp_window.get_tk_widget().grid(row=0, column = 2, rowspan=15)
-        close('all')
-
+        temp_window = FigureCanvasTkAgg(fig, master=self.numerical_simulation_tab)
+        temp_window.get_tk_widget().grid(row=0, column=2, rowspan=15)
+        close("all")
 
 
 def initialize_window():
