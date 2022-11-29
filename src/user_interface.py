@@ -148,11 +148,13 @@ class InteractiveUserInterface:
         self.nx = tk.IntVar()
         self.t_limit = tk.IntVar()
         self.nt = tk.IntVar()
+        self.FPS = tk.IntVar()
 
         self.x_limit.set(10)
         self.nx.set(100)
         self.t_limit.set(10)
         self.nt.set(100)
+        self.FPS.set(30)
 
         self.x_limit_entry = tk.Entry(tab, textvariable=self.x_limit)
         label_x_limit = tk.Label(tab, text="X Limit")
@@ -165,6 +167,9 @@ class InteractiveUserInterface:
 
         self.nt_entry = tk.Entry(tab, textvariable=self.nt)
         label_nt = tk.Label(tab, text="Number of Points in T")
+
+        self.FPS_entry = tk.Entry(tab, textvariable=self.FPS)
+        label_FPS = tk.Label(tab, text="Frames per second")
 
         # Sliders for various curve parameters
         self.frequency_slider = tk.Scale(
@@ -245,14 +250,16 @@ class InteractiveUserInterface:
         label_t_limit.grid(row=2, column=0)
         self.nt_entry.grid(row=3, column=1, padx=5)
         label_nt.grid(row=3, column=0)
+        self.FPS_entry.grid(row=4, column=1, padx=5)
+        label_FPS.grid(row=4, column=0)
 
-        label_input_shape_menu.grid(row=5, column=0)
-        input_shape_menu.grid(row=5, column=1, padx=10)
-        self.frequency_slider.grid(row=6, column=0, padx=10, columnspan=2)
-        self.amplitude_slider.grid(row=7, column=0, padx=10, columnspan=2)
-        self.phase_slider.grid(row=8, column=0, padx=10, columnspan=2)
+        label_input_shape_menu.grid(row=6, column=0)
+        input_shape_menu.grid(row=6, column=1, padx=10)
+        self.frequency_slider.grid(row=7, column=0, padx=10, columnspan=2)
+        self.amplitude_slider.grid(row=8, column=0, padx=10, columnspan=2)
+        self.phase_slider.grid(row=9, column=0, padx=10, columnspan=2)
         self.plot_window.get_tk_widget().grid(row=0, column=2, rowspan=15)
-        update_plot_button.grid(row=14, column=0, columnspan=2)
+        update_plot_button.grid(row=15, column=0, columnspan=2)
 
     def numerical_simulation_tab_construction(self, tab):
         # Widgets for this tab
