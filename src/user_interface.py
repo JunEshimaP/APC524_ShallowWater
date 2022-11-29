@@ -43,12 +43,13 @@ class makemovie:
         save the animation into .mp4
     """
 
-    def __init__(self, filename, N):
+    def __init__(self, filename, N, xlim):
         self.filename = filename
         self.N = N
         # set up matplotlib as in matplotlib.animation documentation
         self.plottedgraphfig, self.plottedgraphfigax = plt.subplots()
         (self.curve,) = self.plottedgraphfigax.plot([], [])
+        self.xlim = xlim
 
     # read out values from .txt file
     def readvalues(self):
@@ -61,8 +62,8 @@ class makemovie:
     #   initialise the plot
     def initplot(self):
         # set axis
-        self.plottedgraphfigax.set_xlim(0, self.N - 1)
-        self.plottedgraphfigax.set_ylim(0, 10)
+        self.plottedgraphfigax.set_xlim(0, self.xlim)
+        self.plottedgraphfigax.set_ylim(0, 2)
         return (self.curve,)
 
     # update the plot every frame
@@ -94,7 +95,8 @@ class makemovie:
         # set up the writer
         # note: need to have ffmpeg installed.
         writervideo = animation.FFMpegWriter(fps=30)
-        self.ani.save(r"sample_movies/sample_generated.mp4", writer=writervideo)
+        self.ani.save(r"src/sample_movies/sample_generated.mp4", writer=writervideo)
+        print("Movie Made")
 
 
 class InteractiveUserInterface:
@@ -109,7 +111,7 @@ class InteractiveUserInterface:
         # need a fix for this (temporary)
         self.FPS = 30
         self.totduration = 8.0
-        self.moviefilename = r"sample_movies/sample_generated.mp4"
+        self.moviefilename = r"src/sample_movies/sample_generated.mp4"
 
         master.config(menu=menu_bar)
         # Create the tabs for the plotting
@@ -277,7 +279,8 @@ class InteractiveUserInterface:
     def output_tab_construction(self, tab):
 
         # bar with some text (maybe put in values of physical variables etc)
-        label = tk.Label(tab, text=f"Output(FPS = {self.FPS}):", fg="white", bg="black")
+        FPS = self.FPS.get()
+        label = tk.Label(tab, text=f"Output(FPS = {FPS}):", fg="white", bg="black")
         self.pp_btn = tk.Button(tab, text="play", command=self.play_pause, width=5)
 
         # video player
@@ -407,35 +410,39 @@ class InteractiveUserInterface:
         x, h_i = self.curve.get_data()
         nx = self.nx.get()
         time_length = self.t_limit.get()
-        timeOutput = np.array([0.5, 1, 2, 1e8])
 
         hu_i = np.zeros(np.shape(x))
         h_i = np.array(h_i) + 1
         x = np.array(x)
 
         dx = self.x_limit.get() / nx
+        FPS = self.FPS.get()
+        fig = SWE_1D(dx, x, time_length, nx, FPS, h=h_i, hu=hu_i)
 
-        fig = SWE_1D(dx, x, time_length, nx, h=h_i, hu=hu_i, time_output=timeOutput)
+        # make a movie
+        moviemake = makemovie(r"output.out", nx, self.x_limit.get())
+        moviemake.saveanimation()
 
         temp_window = FigureCanvasTkAgg(fig, master=self.numerical_simulation_tab)
         temp_window.get_tk_widget().grid(row=0, column=2, rowspan=15)
         close("all")
 
     def run_default_simulation(self):
-        timeOutput = np.array([0.5, 1, 2, 1e8])
 
         domainLength: float = 20.0  # meter
         xTotalNumber: int = 100
         timeLength: float = 4.0  # second
-        timeOutput = np.array([0.5, 1, 2, 1e8])
 
         dx: float = domainLength / xTotalNumber
         xArray = np.linspace(-domainLength / 2, domainLength / 2 - dx, xTotalNumber)
         h_i, hu_i = inputInitialValue(xArray, xTotalNumber)
 
-        fig = SWE_1D(
-            dx, xArray, timeLength, xTotalNumber, h=h_i, hu=hu_i, time_output=timeOutput
-        )
+        FPS = self.FPS.get()
+        fig = SWE_1D(dx, xArray, timeLength, xTotalNumber, FPS, h=h_i, hu=hu_i)
+
+        # make a movie
+        moviemake = makemovie(r"output.out", xTotalNumber, domainLength / 2)
+        moviemake.saveanimation()
 
         temp_window = FigureCanvasTkAgg(fig, master=self.numerical_simulation_tab)
         temp_window.get_tk_widget().grid(row=0, column=2, rowspan=15)
