@@ -147,15 +147,18 @@ def SWE_1D(
 
         # Output the file
         if Flag_output == 1:
+            f=open('output.txt','a')
             numpy.savetxt(
-                "output" + str(t) + ".out", (h, xArray, t * numpy.ones(xTotalNumber))
+                f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
             )
             twoPlot(1, xArray, h, hu, Flag_output)
             print(f"=========Data at t={t} outputed===========")
 
         Flag_output = 0
+    f.close()
 
     return pylab.gcf()
+
 
 
 if __name__ == "__main__":
