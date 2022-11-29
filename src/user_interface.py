@@ -43,13 +43,14 @@ class makemovie:
         save the animation into .mp4
     """
 
-    def __init__(self, filename, N, xlim):
+    def __init__(self, filename, N: int, xlim: float, FPS: int):
         self.filename = filename
         self.N = N
         # set up matplotlib as in matplotlib.animation documentation
         self.plottedgraphfig, self.plottedgraphfigax = plt.subplots()
         (self.curve,) = self.plottedgraphfigax.plot([], [])
         self.xlim = xlim
+        self.FPS = FPS
 
     # read out values from .txt file
     def readvalues(self):
@@ -94,7 +95,7 @@ class makemovie:
 
         # set up the writer
         # note: need to have ffmpeg installed.
-        writervideo = animation.FFMpegWriter(fps=30)
+        writervideo = animation.FFMpegWriter(fps=self.FPS)
         self.ani.save(r"src/sample_movies/sample_generated.mp4", writer=writervideo)
         print("Movie Made")
 
@@ -108,9 +109,6 @@ class InteractiveUserInterface:
         file_menu.add_command(label="Exit", command=master.destroy)
         menu_bar.add_cascade(label="File", menu=file_menu)
 
-        # need a fix for this (temporary)
-        self.FPS = 30
-        self.totduration = 8.0
         self.moviefilename = r"src/sample_movies/sample_generated.mp4"
 
         master.config(menu=menu_bar)
@@ -151,6 +149,7 @@ class InteractiveUserInterface:
         self.t_limit = tk.IntVar()
         self.nt = tk.IntVar()
         self.FPS = tk.IntVar()
+        self.totduration = tk.IntVar()
 
         self.x_limit.set(10)
         self.nx.set(100)
@@ -296,17 +295,17 @@ class InteractiveUserInterface:
             tab,
             variable=self.currenttime,
             from_=0,
-            to=self.totduration,
+            to=self.t_limit.get(),
             digits=1,
             resolution=1,
             orient=tk.HORIZONTAL,
             command=self.settime_slider,
-            tickinterval=math.floor(self.totduration / 4),
+            tickinterval=math.floor(self.t_limit.get() / 4),
             showvalue=0,
         )
 
         timefromstartlabel = tk.Label(tab, textvariable=self.currenttime)
-        totdurationlabel = tk.Label(tab, text=str(self.totduration))
+        totdurationlabel = tk.Label(tab, text=str(self.t_limit.get()))
 
         self.videoplayer.bind("<<SecondChanged>>", self.update_slider)
 
@@ -410,6 +409,7 @@ class InteractiveUserInterface:
         x, h_i = self.curve.get_data()
         nx = self.nx.get()
         time_length = self.t_limit.get()
+        self.totduration = time_length
 
         hu_i = np.zeros(np.shape(x))
         h_i = np.array(h_i) + 1
@@ -420,7 +420,7 @@ class InteractiveUserInterface:
         fig = SWE_1D(dx, x, time_length, nx, FPS, h=h_i, hu=hu_i)
 
         # make a movie
-        moviemake = makemovie(r"output.out", nx, self.x_limit.get())
+        moviemake = makemovie(r"output.out", nx, self.x_limit.get(), self.FPS.get())
         moviemake.saveanimation()
 
         temp_window = FigureCanvasTkAgg(fig, master=self.numerical_simulation_tab)
@@ -431,17 +431,17 @@ class InteractiveUserInterface:
 
         domainLength: float = 20.0  # meter
         xTotalNumber: int = 100
-        timeLength: float = 4.0  # second
+        timeLength: float = 10.0  # second
+        FPS: int = 30
 
         dx: float = domainLength / xTotalNumber
         xArray = np.linspace(-domainLength / 2, domainLength / 2 - dx, xTotalNumber)
         h_i, hu_i = inputInitialValue(xArray, xTotalNumber)
 
-        FPS = self.FPS.get()
         fig = SWE_1D(dx, xArray, timeLength, xTotalNumber, FPS, h=h_i, hu=hu_i)
 
         # make a movie
-        moviemake = makemovie(r"output.out", xTotalNumber, domainLength / 2)
+        moviemake = makemovie(r"output.out", xTotalNumber, domainLength / 2, FPS)
         moviemake.saveanimation()
 
         temp_window = FigureCanvasTkAgg(fig, master=self.numerical_simulation_tab)
