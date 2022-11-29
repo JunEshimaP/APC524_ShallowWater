@@ -127,6 +127,7 @@ def SWE_1D(
     Index_output: int = 0
     Flag_output: int = 0
     t: float = 0.0
+    f=open('output.out','a')
     while t < timeLength:
         dt: float = 0.1 * dx / math.sqrt(g * h.max())
         if (
@@ -147,7 +148,6 @@ def SWE_1D(
 
         # Output the file
         if Flag_output == 1:
-            f=open('output.out','a')
             numpy.savetxt(
                 f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
             )
