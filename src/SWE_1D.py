@@ -147,7 +147,7 @@ def SWE_1D(
 
         # Output the file
         if Flag_output == 1:
-            f=open('output.txt','a')
+            f=open('output.out','a')
             numpy.savetxt(
                 f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
             )
