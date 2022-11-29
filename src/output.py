@@ -8,6 +8,39 @@ import math
 # sample_movies/sample.mp4
 # infofile contains information on frame rate, duration etc.
 class InteractiveOutput:
+    """Sets up an interactive output
+
+    Input
+    -----
+    master : tk window
+        This is the window in which the output will be given
+
+    moviefilename : string
+        This is the location and name of the output movie (.mp4 file)
+
+    infofilename : string
+        This is the location and name of the information file with information
+        on FPS and duration of the movie (.txt file)
+
+    Methods
+    -------
+    __init__ :
+        initialise values
+
+    update_slider :
+        update the time value of the slider
+
+    settime_slider :
+        change the progress of the movie based on input by the user
+
+    play_pause :
+        set up the play/pause button
+
+    output_tab_construction :
+        set up the tab by inserting labels, buttons, interactive sliders
+        and play the move made in moviemaker.py
+    """
+
     def __init__(self, master, moviefilename, infofilename):
         # Build a container for this plot
         frame = tk.Frame(master)
@@ -86,8 +119,8 @@ class InteractiveOutput:
         self.videoplayer.bind("<<SecondChanged>>", self.update_slider)
 
         # Packing widgets
-        tab.rowconfigure([0, 1, 2, 3, 4, 5], minsize=50)
-        tab.columnconfigure([0, 1, 2], minsize=50)
+        tab.rowconfigure([0, 1, 2, 3, 4, 5], minsize=100)
+        tab.columnconfigure([0, 1, 2], minsize=200)
         label.grid(row=1, column=0, columnspan=3, sticky="ew")
         self.videoplayer.grid(row=2, column=0, rowspan=3, columnspan=3, sticky="nsew")
         timefromstartlabel.grid(row=5, column=0, padx=10, pady=10)
@@ -97,7 +130,8 @@ class InteractiveOutput:
 
     # updates current time, used to update slider
     def update_slider(self, event):
-        self.currenttime.set(self.videoplayer.current_duration())
+        # the second is a bit glichy, so have the display in integer seconds
+        self.currenttime.set(round(self.videoplayer.current_duration()))
 
     # change video player to the point at which the user specifies
     def settime_slider(self, event):
@@ -126,7 +160,7 @@ def initialize_window():
 def main():
     root = initialize_window()
     app = InteractiveOutput(
-        root, r"sample_movies/sample.mp4", r"sample_movies/sampleinfo.txt"
+        root, r"sample_movies/sample_generated.mp4", r"sample_movies/sampleinfo.txt"
     )
     root.mainloop()
 
