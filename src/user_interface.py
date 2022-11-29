@@ -246,7 +246,7 @@ class InteractiveUserInterface:
         timeOutput = np.array([0.5, 1, 2, 1e8])
 
         hu_i = np.zeros(np.shape(x))
-        h_i = np.array(h_i) + 2
+        h_i = np.array(h_i) + 1
         x = np.array(x)
 
         dx = self.x_limit.get() / nx
