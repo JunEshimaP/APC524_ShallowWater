@@ -21,7 +21,7 @@ h_i, hu_i = SWE_1D.inputInitialValue(xArray, xTotalNumber)
 
 def test_of_outputs():
     SWE_1D.SWE_1D(
-        dx, xArray, timeLength, xTotalNumber, FPS, h=h_i, hu=hu_i
+        dx, xArray, timeLength, xTotalNumber, FPS, SWE_1D.eulerForward, SWE_1D.centralDiff_Order2, h=h_i, hu=hu_i,
     )
     os.remove("Height+Momentum.png")
 

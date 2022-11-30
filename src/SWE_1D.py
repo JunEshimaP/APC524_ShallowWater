@@ -19,15 +19,56 @@ Here h is the total fluid column height, u is the velocity, and g is the gravita
 Ref: Conservative form in https://en.wikipedia.org/wiki/Shallow_water_equations
 
 Boundary contions:
-    Periodic boundary contion
+    Periodic boundary condtion
     
 Initial conditions:
-    Gaussian hump in the middle
+    1. Gaussian hump in the middle
+    
+    2. Rock hitting the water
+    ToDo ...
     
 Finite difference:
     Nodes on the edges
-
-|-|-|-|-
+    |-|-|-|-
+    
+Physical constraints to run the simulation:
+    1. "Shallow" assumption: slope = dh/dx << 1 i.e. the domain length need to
+    much larger than the height.
+    2. Periodic BC: input for initial should be a smooth and periodic function of x.
+    3. No dry place for the shallow water layer. Suppose a total height h0 +h, the variation
+    of the height h should be much smaller than the base-line height h0
+    Note that by << a ratio of 0.3 is roughly enough.
+    
+Time integration methods to choose:
+    Suppose an ODE du/dt = f(u), we provide XX methods to do the time integration. Note that 
+    in the following we use u^n and u^n+1 to represent the variables at the current and next
+    step respectively.
+    1. Explicit methods
+    
+        1.1 Euler forward
+        u^n+1 = u^n + f(u^n) * dt
+        
+        1.2 2nd-order Runge-Kutta method
+        u^n+1/2 = u^n + 0.5 * f(u^n) * dt
+        u^n+1 = u^n + f(u^n+1/2) * dt
+        
+        1.3 others
+        TODO ...
+        
+    2. Implicit methods
+    TODO ...
+    
+Spatial differentiation methods to choose:
+    1. 2nd order central difference
+    df/dx = (f(i+1) - f(i-1)) / (2 * dx)
+    
+    2.
+    
+    2. 5th order WENO scheme
+    TODO ...
+        
+        
+        
 """
 import numpy
 import pylab
@@ -100,9 +141,35 @@ def centralDiff_Order2(f: FArray, dx: float) -> FArray:
     dfdx[-1] = (f[0] - f[-2]) / (2.0 * dx)
     return dfdx
 
+# Euler forward
+def eulerForward(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
+    newh: FArray = 0 * h
+    newhu: FArray = 0 * hu
+    
+    newh = h - dt * SD(hu, dx)
+    newhu = hu - dt * SD((hu**2) / h + 0.5 * g * (h**2), dx)
+    return [newh, newhu]
+    
+# 2nd-order Runge-Kutta method
+def RK2(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
+    newh: FArray = 0 * h
+    newhu: FArray = 0 * hu
+    h1: FArray = 0 * h
+    hu1: FArray = 0 * hu
+    
+    # intermediate estimation at t + dt/2
+    h1 = h - 0.5 * dt * SD(hu, dx)
+    hu1 = hu - 0.5 * dt * SD((hu**2) / h + 0.5 * g * (h**2), dx)
+    
+    # the next step based on the flux at t + dt/2
+    newh = h - dt * SD(hu1, dx)
+    newhu = hu - dt * SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)
+    
+    return [newh, newhu]
+    
 
 def SWE_1D(
-    dx: float, xArray: FArray, timeLength: float, xTotalNumber: int, FPS: int, **kwargs
+    dx: float, xArray: FArray, timeLength: float, xTotalNumber: int, FPS: int, TI, SD, **kwargs
 ) -> None:
     """
     1D shallow water wave equations.
@@ -147,8 +214,7 @@ def SWE_1D(
             Flag_output = 1
 
         # Euler forward
-        newh = h - dt * centralDiff_Order2(hu, dx)
-        newhu = hu - dt * centralDiff_Order2((hu**2) / h + 0.5 * g * (h**2), dx)
+        [newh, newhu] = TI(h, hu ,dx, dt, SD)
         t += dt
         h = newh
         hu = newhu
@@ -158,7 +224,7 @@ def SWE_1D(
             numpy.savetxt(
                 f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
             )
-            #twoPlot(1, xArray, h, hu, Flag_output)
+            twoPlot(1, xArray, h, hu, Flag_output)
             print(f"=========Data at t={t} outputed===========")
 
         Flag_output = 0
@@ -174,6 +240,9 @@ if __name__ == "__main__":
     xTotalNumber: int = 100
     timeLength: float = 4.0  # second
     FPS: int = 20
+    #TI = eulerForward # time integration method
+    TI = RK2
+    SD = centralDiff_Order2 # space differentiation method
     #timeOutput: FArray = numpy.array([0.5, 1, 2, 1e8])
 
     dx: float = domainLength / xTotalNumber
@@ -181,5 +250,5 @@ if __name__ == "__main__":
         -domainLength / 2, domainLength / 2 - dx, xTotalNumber
     )
 
-    SWE_1D(dx, xArray, timeLength, xTotalNumber, FPS)
+    SWE_1D(dx, xArray, timeLength, xTotalNumber, FPS, TI, SD)
     
