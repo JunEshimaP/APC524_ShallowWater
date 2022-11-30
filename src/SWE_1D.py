@@ -37,7 +37,7 @@ Physical constraints to run the simulation:
     2. Periodic BC: input for initial should be a smooth and periodic function of x.
     3. No dry place for the shallow water layer. Suppose a total height h0 +h, the variation
     of the height h should be much smaller than the base-line height h0
-    Note that by << a ratio of 0.3 is roughly enough.
+    Note that by <<, a ratio of 0.3 is roughly enough.
     
 Time integration methods to choose:
     Suppose an ODE du/dt = f(u), we provide XX methods to do the time integration. Note that 
@@ -61,8 +61,6 @@ Time integration methods to choose:
 Spatial differentiation methods to choose:
     1. 2nd order central difference
     df/dx = (f(i+1) - f(i-1)) / (2 * dx)
-    
-    2.
     
     2. 5th order WENO scheme
     TODO ...
@@ -151,6 +149,7 @@ def eulerForward(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
     return [newh, newhu]
     
 # 2nd-order Runge-Kutta method
+# https://lpsa.swarthmore.edu/NumInt/NumIntSecond.html
 def RK2(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
     newh: FArray = 0 * h
     newhu: FArray = 0 * hu
@@ -167,6 +166,64 @@ def RK2(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
     
     return [newh, newhu]
     
+# 3rd-order Runge-Kutta method
+# p507 High order methods for computational physics
+def RK3(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
+    newh: FArray = 0 * h
+    newhu: FArray = 0 * hu
+    h1: FArray = 0 * h
+    hu1: FArray = 0 * hu
+    h2: FArray = 0 * h
+    hu2: FArray = 0 * hu
+    
+    # step 1
+    h1 = h -  dt * SD(hu, dx)
+    hu1 = hu - dt * SD((hu**2) / h + 0.5 * g * (h**2), dx)
+    
+    # step 2
+    h2 = 0.75 * h + 0.25 * h1 -  0.25 * dt * SD(hu1, dx)
+    hu2 = 0.75 * hu + 0.25 * hu1 - 0.25 * dt * SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)    
+    
+    # the next step based on the flux at t + dt/2
+    newh = 1.0 / 3.0 * h + 2.0 / 3.0 * h2 - 2.0 / 3.0 * dt * SD(hu2, dx)
+    newhu = 1.0 / 3.0 * hu + 2.0 / 3.0 * hu2 - 2.0 /3.0 * dt * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx)
+    
+    return [newh, newhu]
+
+# 4th-order Runge-Kutta method
+# p507 High order methods for computational physics
+def RK4(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
+    newh: FArray = 0 * h
+    newhu: FArray = 0 * hu
+    h1: FArray = 0 * h
+    hu1: FArray = 0 * hu
+    h2: FArray = 0 * h
+    hu2: FArray = 0 * hu
+    h3: FArray = 0 * h
+    hu3: FArray = 0 * hu
+    
+    # step 1
+    h1 = h - 0.5 * dt * SD(hu, dx)
+    hu1 = hu - 0.5 * dt * SD((hu**2) / h + 0.5 * g * (h**2), dx)
+    
+    # step 2
+    h2 =  h1 + 0.5 * dt * (SD(hu, dx) - SD(hu1, dx))
+    hu2 = hu1 + 0.5 * dt * (SD((hu**2) / h + 0.5 * g * (h**2), dx) - 
+                            SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx))  
+    
+    # step 3
+    h3 =  h2 + 0.5 * dt * (SD(hu1, dx) - 2.0 * SD(hu2, dx))
+    hu3 = hu2 + 0.5 * dt * (SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx) - 
+                            2.0 * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx))  
+    
+    # the next step based on the flux at t + dt/2
+    newh = h3 + 1.0 / 6.0 * dt * ( - SD(hu, dx) - 2.0 * SD(hu1, dx) + 
+                                  4.0 * SD(hu2, dx) - SD(hu3, dx))
+    newhu = hu3 + 1.0 / 6.0 * dt * ( - SD((hu**2) / h + 0.5 * g * (h**2), dx)
+                                    - 2.0 * SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)
+                                    + 4.0 * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx)
+                                    - SD((hu3**2) / h3 + 0.5 * g * (h3**2), dx))
+    return [newh, newhu]
 
 def SWE_1D(
     dx: float, xArray: FArray, timeLength: float, xTotalNumber: int, FPS: int, TI, SD, **kwargs
@@ -241,7 +298,7 @@ if __name__ == "__main__":
     timeLength: float = 4.0  # second
     FPS: int = 20
     #TI = eulerForward # time integration method
-    TI = RK2
+    TI = RK4
     SD = centralDiff_Order2 # space differentiation method
     #timeOutput: FArray = numpy.array([0.5, 1, 2, 1e8])
 
