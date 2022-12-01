@@ -1,3 +1,8 @@
 # Python binary files
 __pycache__
+
+# Mac OS
 .DS_Store
+
+# vscode
+.vscode/
