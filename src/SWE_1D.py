@@ -99,7 +99,7 @@ def twoPlot(figNum: int, x: FArray, y1: FArray, y2: FArray, output_flag: int) ->
     yLimL1: float = 0.0
     yLimR1: float = 1.5 + 0.2
 
-    pylab.figure(figNum, figsize=(10,5))
+    pylab.figure(figNum, figsize=(10, 5))
     pylab.subplots_adjust(left=0.08, right=0.97, bottom=0.15, top=0.9, wspace=0.3)
 
     pylab.subplot(121)
@@ -128,8 +128,6 @@ def twoPlot(figNum: int, x: FArray, y1: FArray, y2: FArray, output_flag: int) ->
     pylab.draw()
     if output_flag == 1:
         pylab.savefig(title1 + "+" + title2, facecolor="w", edgecolor="w")
-    
-    
 
 
 # Second order central difference
@@ -139,15 +137,17 @@ def centralDiff_Order2(f: FArray, dx: float) -> FArray:
     dfdx[-1] = (f[0] - f[-2]) / (2.0 * dx)
     return dfdx
 
+
 # Euler forward
 def eulerForward(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
     newh: FArray = 0 * h
     newhu: FArray = 0 * hu
-    
+
     newh = h - dt * SD(hu, dx)
     newhu = hu - dt * SD((hu**2) / h + 0.5 * g * (h**2), dx)
     return [newh, newhu]
-    
+
+
 # 2nd-order Runge-Kutta method
 # https://lpsa.swarthmore.edu/NumInt/NumIntSecond.html
 def RK2(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
@@ -155,17 +155,18 @@ def RK2(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
     newhu: FArray = 0 * hu
     h1: FArray = 0 * h
     hu1: FArray = 0 * hu
-    
+
     # intermediate estimation at t + dt/2
     h1 = h - 0.5 * dt * SD(hu, dx)
     hu1 = hu - 0.5 * dt * SD((hu**2) / h + 0.5 * g * (h**2), dx)
-    
+
     # the next step based on the flux at t + dt/2
     newh = h - dt * SD(hu1, dx)
     newhu = hu - dt * SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)
-    
+
     return [newh, newhu]
-    
+
+
 # 3rd-order Runge-Kutta method
 # p507 High order methods for computational physics
 def RK3(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
@@ -175,20 +176,29 @@ def RK3(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
     hu1: FArray = 0 * hu
     h2: FArray = 0 * h
     hu2: FArray = 0 * hu
-    
+
     # step 1
-    h1 = h -  dt * SD(hu, dx)
+    h1 = h - dt * SD(hu, dx)
     hu1 = hu - dt * SD((hu**2) / h + 0.5 * g * (h**2), dx)
-    
+
     # step 2
-    h2 = 0.75 * h + 0.25 * h1 -  0.25 * dt * SD(hu1, dx)
-    hu2 = 0.75 * hu + 0.25 * hu1 - 0.25 * dt * SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)    
-    
+    h2 = 0.75 * h + 0.25 * h1 - 0.25 * dt * SD(hu1, dx)
+    hu2 = (
+        0.75 * hu
+        + 0.25 * hu1
+        - 0.25 * dt * SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)
+    )
+
     # the next step based on the flux at t + dt/2
     newh = 1.0 / 3.0 * h + 2.0 / 3.0 * h2 - 2.0 / 3.0 * dt * SD(hu2, dx)
-    newhu = 1.0 / 3.0 * hu + 2.0 / 3.0 * hu2 - 2.0 /3.0 * dt * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx)
-    
+    newhu = (
+        1.0 / 3.0 * hu
+        + 2.0 / 3.0 * hu2
+        - 2.0 / 3.0 * dt * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx)
+    )
+
     return [newh, newhu]
+
 
 # 4th-order Runge-Kutta method
 # p507 High order methods for computational physics
@@ -201,32 +211,47 @@ def RK4(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
     hu2: FArray = 0 * hu
     h3: FArray = 0 * h
     hu3: FArray = 0 * hu
-    
+
     # step 1
     h1 = h - 0.5 * dt * SD(hu, dx)
     hu1 = hu - 0.5 * dt * SD((hu**2) / h + 0.5 * g * (h**2), dx)
-    
+
     # step 2
-    h2 =  h1 + 0.5 * dt * (SD(hu, dx) - SD(hu1, dx))
-    hu2 = hu1 + 0.5 * dt * (SD((hu**2) / h + 0.5 * g * (h**2), dx) - 
-                            SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx))  
-    
+    h2 = h1 + 0.5 * dt * (SD(hu, dx) - SD(hu1, dx))
+    hu2 = hu1 + 0.5 * dt * (
+        SD((hu**2) / h + 0.5 * g * (h**2), dx)
+        - SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)
+    )
+
     # step 3
-    h3 =  h2 + 0.5 * dt * (SD(hu1, dx) - 2.0 * SD(hu2, dx))
-    hu3 = hu2 + 0.5 * dt * (SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx) - 
-                            2.0 * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx))  
-    
+    h3 = h2 + 0.5 * dt * (SD(hu1, dx) - 2.0 * SD(hu2, dx))
+    hu3 = hu2 + 0.5 * dt * (
+        SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)
+        - 2.0 * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx)
+    )
+
     # the next step based on the flux at t + dt/2
-    newh = h3 + 1.0 / 6.0 * dt * ( - SD(hu, dx) - 2.0 * SD(hu1, dx) + 
-                                  4.0 * SD(hu2, dx) - SD(hu3, dx))
-    newhu = hu3 + 1.0 / 6.0 * dt * ( - SD((hu**2) / h + 0.5 * g * (h**2), dx)
-                                    - 2.0 * SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)
-                                    + 4.0 * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx)
-                                    - SD((hu3**2) / h3 + 0.5 * g * (h3**2), dx))
+    newh = h3 + 1.0 / 6.0 * dt * (
+        -SD(hu, dx) - 2.0 * SD(hu1, dx) + 4.0 * SD(hu2, dx) - SD(hu3, dx)
+    )
+    newhu = hu3 + 1.0 / 6.0 * dt * (
+        -SD((hu**2) / h + 0.5 * g * (h**2), dx)
+        - 2.0 * SD((hu1**2) / h1 + 0.5 * g * (h1**2), dx)
+        + 4.0 * SD((hu2**2) / h2 + 0.5 * g * (h2**2), dx)
+        - SD((hu3**2) / h3 + 0.5 * g * (h3**2), dx)
+    )
     return [newh, newhu]
 
+
 def SWE_1D(
-    dx: float, xArray: FArray, timeLength: float, xTotalNumber: int, FPS: int, TI, SD, **kwargs
+    dx: float,
+    xArray: FArray,
+    timeLength: float,
+    xTotalNumber: int,
+    FPS: int,
+    TI,
+    SD,
+    **kwargs,
 ) -> None:
     """
     1D shallow water wave equations.
@@ -241,46 +266,42 @@ def SWE_1D(
         h = kwargs["h"]
         hu = kwargs["hu"]
 
-    #if "time_output" in kwargs:
-        #timeOutput = kwargs["time_output"]
+    # if "time_output" in kwargs:
+    # timeOutput = kwargs["time_output"]
 
     newh: FArray = 0 * h
     newhu: FArray = 0 * hu
-    timeOutput: FArray = numpy.arange(1.0/FPS, timeLength + 1.0/FPS, 1.0/FPS)
-    timeOutput = numpy.append(timeOutput,1e8)
+    timeOutput: FArray = numpy.arange(1.0 / FPS, timeLength + 1.0 / FPS, 1.0 / FPS)
+    timeOutput = numpy.append(timeOutput, 1e8)
     twoPlot(1, xArray, h, hu, 0)
 
     # Time marching
     Index_output: int = 0
     Flag_output: int = 0
     t: float = 0.0
-    os.remove('output.out')
-    f=open('output.out','a')
-    numpy.savetxt(
-        f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
-    )
+    try:
+        os.remove("output.out")
+    except Exception:
+        pass
+    f = open("output.out", "a")
+    numpy.savetxt(f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)]))
     print(f"=========Data at t={t} outputed===========")
     while t < timeLength:
-        dt: float = min(0.01 * dx / math.sqrt(g * h.max()), 0.5/FPS)
-        if (
-            t + dt > timeOutput[Index_output]
-            and t < timeOutput[Index_output]
-        ):
+        dt: float = min(0.01 * dx / math.sqrt(g * h.max()), 0.5 / FPS)
+        if t + dt > timeOutput[Index_output] and t < timeOutput[Index_output]:
             dt = timeOutput[Index_output] - t
             Index_output += 1
             Flag_output = 1
 
         # Euler forward
-        [newh, newhu] = TI(h, hu ,dx, dt, SD)
+        [newh, newhu] = TI(h, hu, dx, dt, SD)
         t += dt
         h = newh
         hu = newhu
 
         # Output the file
         if Flag_output == 1:
-            numpy.savetxt(
-                f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
-            )
+            numpy.savetxt(f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)]))
             twoPlot(1, xArray, h, hu, Flag_output)
             print(f"=========Data at t={t} outputed===========")
 
@@ -290,17 +311,16 @@ def SWE_1D(
     return pylab.gcf()
 
 
-
 if __name__ == "__main__":
     # Parameters setting
     domainLength: float = 20.0  # meter
     xTotalNumber: int = 100
     timeLength: float = 4.0  # second
     FPS: int = 20
-    #TI = eulerForward # time integration method
+    # TI = eulerForward # time integration method
     TI = RK4
-    SD = centralDiff_Order2 # space differentiation method
-    #timeOutput: FArray = numpy.array([0.5, 1, 2, 1e8])
+    SD = centralDiff_Order2  # space differentiation method
+    # timeOutput: FArray = numpy.array([0.5, 1, 2, 1e8])
 
     dx: float = domainLength / xTotalNumber
     xArray: FArray = numpy.linspace(
@@ -308,4 +328,3 @@ if __name__ == "__main__":
     )
 
     SWE_1D(dx, xArray, timeLength, xTotalNumber, FPS, TI, SD)
-    
