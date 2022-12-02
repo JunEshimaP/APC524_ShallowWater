@@ -264,7 +264,7 @@ class InteractiveUserInterface:
         # Menu bar
         menu_bar = tk.Menu(master)
         file_menu = tk.Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="Exit", command=master.destroy)
+        file_menu.add_command(label="Exit", command=self.root.destroy)
         menu_bar.add_cascade(label="File", menu=file_menu)
 
         master.config(menu=menu_bar)
@@ -304,14 +304,12 @@ class InteractiveUserInterface:
         self.x_limit = tk.IntVar()
         self.nx = tk.IntVar()
         self.t_limit = tk.IntVar()
-        self.nt = tk.IntVar()
         self.FPS = tk.IntVar()
         self.totduration = tk.IntVar()
 
         self.x_limit.set(10)
         self.nx.set(100)
         self.t_limit.set(10)
-        self.nt.set(100)
         self.FPS.set(30)
 
         self.x_limit_entry = tk.Entry(tab, textvariable=self.x_limit)
@@ -322,9 +320,6 @@ class InteractiveUserInterface:
 
         self.t_limit_entry = tk.Entry(tab, textvariable=self.t_limit)
         label_t_limit = tk.Label(tab, text="T Limit")
-
-        self.nt_entry = tk.Entry(tab, textvariable=self.nt)
-        label_nt = tk.Label(tab, text="Number of Points in T")
 
         self.FPS_entry = tk.Entry(tab, textvariable=self.FPS)
         label_FPS = tk.Label(tab, text="Frames per second")
@@ -406,8 +401,6 @@ class InteractiveUserInterface:
         label_nx.grid(row=1, column=0)
         self.t_limit_entry.grid(row=2, column=1, padx=5)
         label_t_limit.grid(row=2, column=0)
-        self.nt_entry.grid(row=3, column=1, padx=5)
-        label_nt.grid(row=3, column=0)
         self.FPS_entry.grid(row=4, column=1, padx=5)
         label_FPS.grid(row=4, column=0)
 
@@ -416,8 +409,12 @@ class InteractiveUserInterface:
         self.frequency_slider.grid(row=7, column=0, padx=10, columnspan=2)
         self.amplitude_slider.grid(row=8, column=0, padx=10, columnspan=2)
         self.phase_slider.grid(row=9, column=0, padx=10, columnspan=2)
-        self.plot_window.get_tk_widget().grid(row=0, column=2, rowspan=15)
-        update_plot_button.grid(row=15, column=0, columnspan=2)
+        self.plot_window.get_tk_widget().grid(
+            row=0, column=2, rowspan=15, sticky="ENWS"
+        )
+        update_plot_button.grid(row=14, column=0, columnspan=2)
+
+        tab.grid_columnconfigure(2, weight=1)
 
     def numerical_simulation_tab_construction(self, tab):
         """ """
@@ -429,9 +426,42 @@ class InteractiveUserInterface:
             tab, text="Run custom simulation", command=self.run_custom_simulation
         )
 
+        # Numerical Schemes
+        # Time integration
+        time_integration_options = (
+            "Euler Forward",
+            "2nd-order Runge-Kutta",
+            "3rd-order Runge-Kutta",
+            "4th-order Runge-Kutta",
+        )
+        spatial_discretization_options = ("2nd-order Central Difference",)
+        self.selected_time_integration = tk.StringVar()
+        self.selected_time_integration.set("Euler Forward")
+        self.selected_spatial_discretization = tk.StringVar()
+        self.selected_spatial_discretization.set("2nd-order Central Difference")
+
+        time_integration_menu = tk.OptionMenu(
+            tab, self.selected_time_integration, *time_integration_options
+        )
+        label_integration_menu = tk.Label(
+            tab, text="Select the method for time integration:"
+        )
+
+        spatial_discretization_menu = tk.OptionMenu(
+            tab, self.selected_spatial_discretization, *spatial_discretization_options
+        )
+        label_discretization_menu = tk.Label(
+            tab, text="Select the method for spatial discretization:"
+        )
+
         # Packing widgets
         run_default_simulation_button.grid(row=0, column=0, columnspan=2)
         run_custom_simulation_buttom.grid(row=1, column=0, columnspan=2)
+
+        label_integration_menu.grid(row=2, column=0, columnspan=2)
+        time_integration_menu.grid(row=3, column=0, columnspan=2)
+        label_discretization_menu.grid(row=4, column=0, columnspan=2)
+        spatial_discretization_menu.grid(row=5, column=0, columnspan=2)
 
     def output_tab_construction(self, tab):
         """
@@ -646,7 +676,28 @@ class InteractiveUserInterface:
 
         dx = self.x_limit.get() / nx
         FPS = self.FPS.get()
-        fig = SWE_1D(dx, x, time_length, nx, FPS, h=h_i, hu=hu_i)
+
+        time_integration_schemes = {
+            "Euler Forward": eulerForward,
+            "2nd-order Runge-Kutta": RK2,
+            "3rd-order Runge-Kutta": RK3,
+            "4th-order Runge-Kutta": RK4,
+        }
+        spatial_discretization_schemes = {
+            "2nd-order Central Difference": centralDiff_Order2,
+        }
+
+        fig = SWE_1D(
+            dx,
+            x,
+            time_length,
+            nx,
+            FPS,
+            time_integration_schemes[self.selected_time_integration.get()],
+            spatial_discretization_schemes[self.selected_spatial_discretization.get()],
+            h=h_i,
+            hu=hu_i,
+        )
 
         # make a movie
         moviemake = makemovie(
