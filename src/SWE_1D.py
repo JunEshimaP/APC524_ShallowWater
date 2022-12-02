@@ -153,6 +153,7 @@ import math
 import os
 from scipy.constants import g  # standard acceleration of gravity
 from numpy.typing import NDArray
+import time
 
 # type alias (as per problem set 2)
 FArray = NDArray[numpy.float64]
@@ -649,9 +650,9 @@ if __name__ == "__main__":
     
     # Parameters setting
     domainLength: float = 20.0  # meter
-    xTotalNumber: int = 100 #number of divisions
-    timeLength: float = 10.0  # second
-    FPS: int = 20 # frame rate
+    xTotalNumber: int = 500 #number of divisions
+    timeLength: float = 3.0  # second
+    FPS: int = 1 # frame rate
     TI = RK4 # time integration method
     SD = weno5 # space differentiation method
     choice: int = 4; # choice of the initial condition
@@ -661,4 +662,10 @@ if __name__ == "__main__":
     ) # x coordinates of grid points
     
     # run the simulation
+    start = time.time()
     SWE_1D(dx, xArray, timeLength, xTotalNumber, FPS, TI, SD, choice)
+    end = time.time()
+    print("Elapsed = %s" % (end - start))
+    
+
+    
