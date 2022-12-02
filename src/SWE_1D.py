@@ -12,7 +12,7 @@ from numpy.typing import NDArray
 FArray = NDArray[numpy.float64]
 
 
-def inputInitialValue(xArray: FArray, xTotalNumber: int, choice: int) -> tuple[FArray, FArray]:
+def inputInitialValue(xArray: FArray, xTotalNumber: int, choice: int = 4) -> tuple[FArray, FArray]:
     
     """
     Purpose: set default input values for user to choose
@@ -392,7 +392,7 @@ def RK4(h: FArray, hu: FArray, dx: float, dt: float, SD) -> list:
 
 def SWE_1D(
     dx: float, xArray: FArray, timeLength: float, xTotalNumber: int, FPS: int, 
-    TI, SD, choice: int = 4, **kwargs) -> None:
+    TI, SD, choice: int, **kwargs) -> None:
     
     """
     Purpose: do the 1D SWE simulation
