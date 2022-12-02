@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+import numpy
+import pylab
+import math
+import os
+from scipy.constants import g  # standard acceleration of gravity
+from numpy.typing import NDArray
+
+# type alias (as per problem set 2)
+FArray = NDArray[numpy.float64]
+
 """
 Revised on Thu Nov  3 11:05:28 2022
 
@@ -148,18 +158,6 @@ Spatial differentiation methods to choose:
     with upwinding stencils
     
 """
-
-
-import numpy
-import pylab
-import math
-import os
-from scipy.constants import g  # standard acceleration of gravity
-from numpy.typing import NDArray
-
-# type alias (as per problem set 2)
-FArray = NDArray[numpy.float64]
-
 
 def inputInitialValue(xArray: FArray, xTotalNumber: int, choice: int = 4) -> tuple[FArray, FArray]:
     
