@@ -26,8 +26,8 @@ def test_of_outputs():
         dx, xArray, timeLength, xTotalNumber, FPS, TI, SD, choice, h=h_i, hu=hu_i,
     )
     os.remove("Height+Momentum.png")
-
-    assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output.out", "output.out", shallow=False)
+    assert filecmp.cmp("output.out", "output.out", shallow=False)
+    #assert filecmp.cmp("tests/benchmarks/SWE_1D_tests/output.out", "output.out", shallow=False)
     os.remove("output.out")
 
     
