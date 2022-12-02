@@ -256,21 +256,76 @@ class makemovie:
 
 class InteractiveUserInterface:
     """
-    overview comments (Josh, can you put this in?)
+    Generates and manages a stand-alone simulation window for the 1D SWE project.
+
+    Input
+    -----
+    master : an instance of the tk.Tk class
+        This requires a user to initialize an instance of the tk.Tk() class (a tk window) that is built into the simulation window
+
+    Methods
+    -------
+    __init__ :
+        initializes the window, building the individual tab framework and file menu
+
+    intro_tab_construction :
+        builds the intro tab and its associated widgets
+
+    input_tab_construction :
+        builds the input tab and its associated widgets
+
+    numerical_simulation_tab_construction :
+        builds the numerical simulation tab and its associated widgets
+
+    output_tab_constructions :
+        builds the output tab and its associated widgets
+
+    update_slider :
+        updates the video player slider in the output tab's values
+
+    settime_slider :
+        sets the value of the video player slider in the output tab based on the user's input
+
+    play_pause :
+        controls the play/pause button in the video player
+
+    pack_input_tab_plot :
+        redraws the plot figure in the input_tab_plot (used when domain/curve type changes)
+
+    update_plot :
+        redraws the plot figure in the input_tab_plot (used when sliders are adjusted)
+
+    run_custom_simulation :
+        executes the SWE_1D() method from SWE_1D.py, and makemovie() class, using the user-defined inputs
+
+    run_default_simulation :
+        executes the SWE_1D() method from SWE_1D.py, and makemovie() class, using several pre-determined inputs
     """
 
     def __init__(self, master):
-        """ """
+        """
+        Initializes the window, building the individual tab framework and file menu
+
+        self.root:
+            the master Tk() instance window that the simulation is being built inside of
+
+        menu_bar:
+            the standard file menu structure for program.
+            The only function is to have a clean exit of the program (self.root.destroy) via File -> Exit
+
+        tab_control:
+            the controlling object for the building of the tab frames
+        """
         self.root = master
         # Menu bar
-        menu_bar = tk.Menu(master)
+        menu_bar = tk.Menu(self.root)
         file_menu = tk.Menu(menu_bar, tearoff=0)
         file_menu.add_command(label="Exit", command=self.root.destroy)
         menu_bar.add_cascade(label="File", menu=file_menu)
 
-        master.config(menu=menu_bar)
+        self.root.config(menu=menu_bar)
         # Create the tabs for the plotting
-        tab_control = ttk.Notebook(master)
+        tab_control = ttk.Notebook(self.root)
         intro_tab = ttk.Frame(tab_control)
         input_tab = ttk.Frame(tab_control)
         self.numerical_simulation_tab = ttk.Frame(tab_control)
@@ -288,6 +343,27 @@ class InteractiveUserInterface:
         tab_control.pack(expand=1, fill="both")
 
     def intro_tab_construction(self, tab):
+        """
+        Builds the intro tab and its associated widgets
+
+        tab:
+            the input tab which points this function to the frame where it should build these widgets
+
+        grouped_frame:
+            more aesthetic packing of the widgets within the tab if they are nested in a frame within the tab
+
+        image_*:
+            the images used in the tab; uses the Pillow library to handle image interfacing with Tkinter
+
+        body_*:
+            a tk.Label() object holding an element of the body of the tab (paragraphs/images)
+
+        *_title:
+            a tk.Label() object holding a section/subsection title
+
+        label_equations and label_image:
+            The two image_* objects stored in tk.Label() objects; uniquely require anchoring of the images to the instance of tk.Label()
+        """
         grouped_frame = tk.Frame(tab)
 
         ### Text and image(s)
@@ -325,7 +401,7 @@ class InteractiveUserInterface:
             Image.open("system_schematic.png").resize((400, 200), Image.LANCZOS)
         )
 
-        title = tk.Label(grouped_frame, font=("Sans Serif", 40), text=title_text)
+        header_title = tk.Label(grouped_frame, font=("Sans Serif", 40), text=title_text)
         tab_description_title = tk.Label(
             grouped_frame, font=("Sans Serif", 30), text=tab_description_title_text
         )
@@ -387,7 +463,7 @@ class InteractiveUserInterface:
         label_schematic.image = image_schematic
         label_schematic.configure(image=image_schematic)
 
-        title.grid(row=0, column=0, columnspan=2)
+        header_title.grid(row=0, column=0, columnspan=2)
         body_1.grid(row=1, column=0, columnspan=2)
         body_2.grid(row=2, column=0, columnspan=2)
         label_equations.grid(row=3, column=0)
@@ -408,7 +484,34 @@ class InteractiveUserInterface:
         tab.grid_columnconfigure(0, weight=1)
 
     def input_tab_construction(self, tab):
-        """ """
+        """
+        Builds the input tab and its associated widgets
+
+        tab:
+            the input tab which points this function to the frame where it should build these widgets
+
+        input_options_frame:
+            more aesthetic packing of the widgets within the tab if they are nested in a frame within the tab. This only
+            groups the different sliders/textboxes used in the user inputs; the plot window is separate
+
+        input_shape_menu:
+            a tk.OptionMenu() instance which builds a drop-down menu for the user to select the desired type of input curve
+
+        self.x_limit_entry, self.nx_entry, self.t_limit_entry, and self.FPS_entry:
+            tk.Entry() instances to allow for user entering of the domain length, number of discretizations in space,
+            the length of simulation time, and output video FPS desired, respectively
+
+        self.frequency_slider, self.amplitude_slider, self.phase_slider, and self.gaussian_shift_slider:
+            tk.Scale() instances to create sliders for the user to adjust the frequency and phase of the sinusoids input,
+            the amplitude of either curve, and the center of the Gaussian hump. The scales automatically update the plotting
+            window when interacted with
+
+        self.plot_window:
+            a matplotlib Figure() instance that is converted to a Tkinter object using the FigureCanvasTkAgg library
+
+        update_plot_button:
+            a button which upon user interaction updates the plotting window; required when the domain/discretization/curve type is changed
+        """
         ### Widgets for this tab
         # Group the inputs in their own frame
         input_options_frame = tk.Frame(tab)
@@ -547,7 +650,18 @@ class InteractiveUserInterface:
         # tab.grid_columnconfigure(0, weight=1)
 
     def numerical_simulation_tab_construction(self, tab):
-        """ """
+        """
+        Builds the numerical simulation tab and its associated widgets
+
+        run_default_simulation_button:
+            tk.Button() instance which calls the run_default_simulation() method
+
+        run_custom_simulation_button:
+            tk.Button() instance which calls the run_custom_simulation() method
+
+        time_integration_menu and spatial_discretization_menu:
+            drop-down menus for the user to select the desired methods for time integration and spatial discretization, respectively
+        """
         # Widgets for this tab
         run_default_simulation_button = tk.Button(
             tab, text="Run default simulation", command=self.run_default_simulation
@@ -698,7 +812,7 @@ class InteractiveUserInterface:
     # change video player to the point at which the user specifies
     def settime_slider(self, event):
         """
-        Get the current value of the slop_slider
+        Get the current value of the slope_slider
 
         self.slope_slider.get():
             This command gets the value that the user has specified
@@ -730,15 +844,20 @@ class InteractiveUserInterface:
             self.pp_btn["text"] = "play"
 
     def pack_input_tab_plot(self):
-        """ """
+        """
+        Redraws the plot figure in the input_tab_plot (used when domain/curve type changes)
+
+        Gathers data from the input curve (self.curve) and "rebuilds" it using the values from the various user inputs
+
+        The first if- statement performs a check to see if the array of x_points needs to be rebuilt.
+        The second if- statement rebuilds the curve in a sinusoid if the drop-down menu is set to "Sinusoid."
+        The elif- statement rebuilds the curve as a Gaussian curve if the drop-down menu is set to "Gaussian."
+
+        The method closes by redrawing the dotted-red "baseline" (equilibrium water level) and redrawing the input curve
+        """
         # Shared initialization
         curve_type = self.selected_input_shape.get()
         (x, y) = self.curve.get_data()
-
-        # self.nx.set(self.nx.get())
-        # self.x_limit.set(self.x_limit.get())
-        # self.nt.set(self.nt.get())
-        # self.t_limit.set(self.t_limit.get())
 
         if len(x) != self.nx.get() or max(x) != self.x_limit.get():
             x = np.linspace(0, self.x_limit.get(), self.nx.get())
@@ -772,7 +891,12 @@ class InteractiveUserInterface:
         self.plot_window.draw()
 
     def update_plot(self, event):
-        """ """
+        """
+        Redraws the plot figure in the input_tab_plot (used when the sliders are adjusted)
+
+        The if- statement rebuilds the curve in a sinusoid if the drop-down menu is set to "Sinusoid."
+        The elif- statement rebuilds the curve as a Gaussian curve if the drop-down menu is set to "Gaussian."
+        """
         x, y = self.curve.get_data()
         curve_type = self.selected_input_shape.get()
 
@@ -797,7 +921,27 @@ class InteractiveUserInterface:
             self.plot_window.draw()
 
     def run_custom_simulation(self):
-        """ """
+        """
+        executes the SWE_1D() method from SWE_1D.py, and makemovie() class, using the user-defined inputs
+
+        x:
+            the array of points in x for the simulation domain
+
+        h_i:
+            the height of the water at a point in x
+
+        hu_i:
+            the velocity of the weight at a point in x
+
+        dx:
+            the spatial discretization step
+
+        FPS:
+            the number of frames to output per second
+
+        time_integration_schemes and spatial discretization_schemes:
+            dictionaries that connect the user-selected numerical schemes to the methods within SWE_1D.py
+        """
         # Execute 1D shallow water wave equations
         x, h_i = self.curve.get_data()
         nx = self.nx.get()
@@ -846,7 +990,33 @@ class InteractiveUserInterface:
         close("all")
 
     def run_default_simulation(self):
-        """ """
+        """
+        executes the SWE_1D() method from SWE_1D.py, and makemovie() class, using pre-determined inputs (same as test-cases)
+
+        domainLength:
+            length of the domain in x
+
+        xTotalNumber:
+            the number of the discretizations in x
+
+        timeLength:
+            the length of time to simulate
+
+        FPS:
+            the number of frames per second to output
+
+        dx:
+            the spatial discretization step
+
+        xArray:
+            the spatial discretization
+
+        h_i:
+            the height of the water at a point in x
+
+        hu_i:
+            the velocity of the weight at a point in x
+        """
         domainLength: float = 20.0  # meter
         xTotalNumber: int = 100
         timeLength: float = 10.0  # second
@@ -878,8 +1048,9 @@ class InteractiveUserInterface:
 
 
 def initialize_window():
-    """ """
-    # Initializes a window with a title/window size/a button
+    """
+    Initializes the simulation window with a title
+    """
     window = tk.Tk()
     window.title("Shallow Water Wave Equations - Numerical Simulation")
 
@@ -887,10 +1058,12 @@ def initialize_window():
 
 
 def main():
-    """ """
+    """
+    creates an applet instance, builds the app according to the InteractiveUserInterface, and then enters the gui mainloop
+    """
     root = initialize_window()
     app = InteractiveUserInterface(root)
-    root.mainloop()
+    app.root.mainloop()
 
 
 if __name__ == "__main__":
