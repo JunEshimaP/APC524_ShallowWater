@@ -654,16 +654,16 @@ if __name__ == "__main__":
     # Parameters setting
     domainLength: float = 20.0  # meter
     xTotalNumber: int = 100 #number of divisions
+    dx: float = domainLength / xTotalNumber # grid points distance
+    xArray: FArray = numpy.linspace(
+        -domainLength / 2, domainLength / 2 - dx, xTotalNumber
+    ) # x coordinates of grid points
     timeLength: float = 10.0  # second
     FPS: int = 20 # frame rate
     TI = RK4 # time integration method
     SD = weno5 # space differentiation method
     choice: int = 4; # choice of the initial condition
-    dx: float = domainLength / xTotalNumber # grid points distance
-    xArray: FArray = numpy.linspace(
-        -domainLength / 2, domainLength / 2 - dx, xTotalNumber
-    ) # x coordinates of grid points
-    
+     
     # run the simulation
     # DO NOT REPORT THIS... COMPILATION TIME IS INCLUDED IN THE EXECUTION TIME!
     start = time.time()
