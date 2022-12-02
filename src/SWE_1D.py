@@ -617,7 +617,7 @@ def SWE_1D(
             numpy.savetxt(
                 f, numpy.transpose([h, xArray, t * numpy.ones(xTotalNumber)])
             )
-            twoPlot(1, xArray, h, hu, Flag_output)
+            #twoPlot(1, xArray, h, hu, Flag_output)
             print(f"=========Data at t={t} outputed===========")
 
         Flag_output = 0
@@ -656,7 +656,7 @@ if __name__ == "__main__":
     xTotalNumber: int = 100 #number of divisions
     timeLength: float = 10.0  # second
     FPS: int = 20 # frame rate
-    TI = eulerForward # time integration method
+    TI = RK4 # time integration method
     SD = weno5 # space differentiation method
     choice: int = 4; # choice of the initial condition
     dx: float = domainLength / xTotalNumber # grid points distance
