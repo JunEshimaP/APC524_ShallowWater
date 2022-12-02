@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import math
 from tkVideoPlayer import *
 from pathlib import Path
+from PIL import ImageTk, Image
 
 
 class makemovie:
@@ -270,22 +271,148 @@ class InteractiveUserInterface:
         master.config(menu=menu_bar)
         # Create the tabs for the plotting
         tab_control = ttk.Notebook(master)
+        intro_tab = ttk.Frame(tab_control)
         input_tab = ttk.Frame(tab_control)
         self.numerical_simulation_tab = ttk.Frame(tab_control)
         output_tab = ttk.Frame(tab_control)
 
+        tab_control.add(intro_tab, text="Introduction")
         tab_control.add(input_tab, text="Input")
         tab_control.add(self.numerical_simulation_tab, text="Numerical Simulation")
         tab_control.add(output_tab, text="Output")
 
+        self.intro_tab_construction(intro_tab)
         self.input_tab_construction(input_tab)
         self.numerical_simulation_tab_construction(self.numerical_simulation_tab)
         self.output_tab_construction(output_tab)
         tab_control.pack(expand=1, fill="both")
 
+    def intro_tab_construction(self, tab):
+        grouped_frame = tk.Frame(tab)
+
+        ### Text and image(s)
+        title_text = r"Welcome to the 1D Shallow-Water Equation Simulator!"
+        tab_description_title_text = r"How to Use This Program"
+        paragraph_1 = (
+            "This applet is designed to simulate the 1D shallow-water equations that describe the wave motion of a fluid surface. "
+            "This simple case of fluid flow allows the user to play with parameters like wave height, initial conditions, and "
+            "different numerical simulation schemes to see how these knobs affect the fluid dynamics."
+        )
+        paragraph_2 = (
+            "\nThe 1D shallow-water equations are derived from the famous Navier-Stokes fluid equations, in the specific case where "
+            "the pool of water has a much larger horizontal length scale than the vertical length scale. "
+            "The mathematical equations and schematic describing this system are as follows: "
+        )
+        paragraph_3 = "This program has separated the simulation into three components:"
+        paragraph_input = (
+            "The input tab allows users to describe the state of the system prior to simulating. "
+            "Several options are available to the user in text boxes to describe the spatial discretization and how long to simulate. "
+            'The text box for "X Limit" describes the length of the pool (from 0 to <X Limit>). '
+            'The text box for "T Limit" describes the length of time to simulate (from 0 to <T Limit>).'
+            'The text box for "Frames per second" allow the user to choose how many simulation frames to output per second of video. '
+            "The user also has the option to set the shape of the initial wave, with a dropdown box to switch between a sinusoid and "
+            "a gaussian. There are several slidersto adjust the shape of these curves. "
+            "To the right of these options is a plot which allows the user to preview their input wave shape. "
+            'The user must click the "Update Plot" button to see changes to the input wave shape, as well as get the appropriate curve sliders.'
+        )
+        paragraph_numerical_simulation = "The numerical simulation tab allows users to choose the numerical schemes and then run either their custom simulation or a default simulation."
+        paragraph_output = "The output tab allows the user to view a movie of the evolution of their wave in time."
+        # TODO: "edit these equations to be 1D"
+        image_equations = ImageTk.PhotoImage(
+            Image.open("swe_math.png").resize((400, 200), Image.LANCZOS)
+        )
+        image_schematic = ImageTk.PhotoImage(
+            Image.open("system_schematic.png").resize((400, 200), Image.LANCZOS)
+        )
+
+        title = tk.Label(grouped_frame, font=("Sans Serif", 40), text=title_text)
+        tab_description_title = tk.Label(
+            grouped_frame, font=("Sans Serif", 30), text=tab_description_title_text
+        )
+        input_title = tk.Label(grouped_frame, font=("Sans Serif", 24), text="Input Tab")
+        numerical_simulation_title = tk.Label(
+            grouped_frame, font=("Sans Serif", 24), text="Numerical Simulation Tab"
+        )
+        output_title = tk.Label(
+            grouped_frame, font=("Sans Serif", 24), text="Output Tab"
+        )
+
+        body_1 = tk.Label(
+            grouped_frame,
+            font=("Sans Serif", 15),
+            text=paragraph_1,
+            wraplength=1400,
+            justify="left",
+        )
+        body_2 = tk.Label(
+            grouped_frame,
+            font=("Sans Serif", 15),
+            text=paragraph_2,
+            wraplength=1400,
+            justify="left",
+        )
+        body_3 = tk.Label(
+            grouped_frame,
+            font=("Sans Serif", 15),
+            text=paragraph_3,
+            wraplength=1400,
+            justify="left",
+        )
+        body_input = tk.Label(
+            grouped_frame,
+            font=("Sans Serif", 15),
+            text=paragraph_input,
+            wraplength=1400,
+            justify="left",
+        )
+        body_numerical_simulation = tk.Label(
+            grouped_frame,
+            font=("Sans Serif", 15),
+            text=paragraph_numerical_simulation,
+            wraplength=1400,
+            justify="left",
+        )
+        body_output = tk.Label(
+            grouped_frame,
+            font=("Sans Serif", 15),
+            text=paragraph_output,
+            wraplength=1400,
+            justify="left",
+        )
+
+        label_equations = tk.Label(grouped_frame)
+        label_equations.image = image_equations
+        label_equations.configure(image=image_equations)
+        label_schematic = tk.Label(grouped_frame)
+        label_schematic.image = image_schematic
+        label_schematic.configure(image=image_schematic)
+
+        title.grid(row=0, column=0, columnspan=2)
+        body_1.grid(row=1, column=0, columnspan=2)
+        body_2.grid(row=2, column=0, columnspan=2)
+        label_equations.grid(row=3, column=0)
+        label_schematic.grid(row=3, column=1)
+        tab_description_title.grid(row=5, column=0, columnspan=2)
+        body_3.grid(row=6, column=0, columnspan=2)
+        input_title.grid(row=7, column=0, sticky="W")
+        body_input.grid(row=8, column=0, columnspan=2)
+        numerical_simulation_title.grid(row=9, column=0, sticky="W")
+        body_numerical_simulation.grid(row=10, column=0, columnspan=2)
+        output_title.grid(row=11, column=0, sticky="W")
+        body_output.grid(row=12, column=0, columnspan=2)
+
+        grouped_frame.grid(row=0, column=0, sticky="EWNS")
+        grouped_frame.grid_columnconfigure(0, weight=1)
+
+        tab.grid_rowconfigure(0, weight=1)
+        tab.grid_columnconfigure(0, weight=1)
+
     def input_tab_construction(self, tab):
         """ """
         ### Widgets for this tab
+        # Group the inputs in their own frame
+        input_options_frame = tk.Frame(tab)
+
         # Input curve shape dropdown menu
         input_curve_options = (
             "Sinusoid",
@@ -294,10 +421,10 @@ class InteractiveUserInterface:
         self.selected_input_shape = tk.StringVar()
         self.selected_input_shape.set("Sinusoid")
         input_shape_menu = tk.OptionMenu(
-            tab, self.selected_input_shape, *input_curve_options
+            input_options_frame, self.selected_input_shape, *input_curve_options
         )
         label_input_shape_menu = tk.Label(
-            tab, text="Select the shape for the input wave:"
+            input_options_frame, text="Select the shape for the input wave:"
         )
 
         # Numerical text boxes for generic numerical parameters
@@ -312,21 +439,21 @@ class InteractiveUserInterface:
         self.t_limit.set(10)
         self.FPS.set(30)
 
-        self.x_limit_entry = tk.Entry(tab, textvariable=self.x_limit)
-        label_x_limit = tk.Label(tab, text="X Limit")
+        self.x_limit_entry = tk.Entry(input_options_frame, textvariable=self.x_limit)
+        label_x_limit = tk.Label(input_options_frame, text="X Limit")
 
-        self.nx_entry = tk.Entry(tab, textvariable=self.nx)
-        label_nx = tk.Label(tab, text="Number of Points in X")
+        self.nx_entry = tk.Entry(input_options_frame, textvariable=self.nx)
+        label_nx = tk.Label(input_options_frame, text="Number of Points in X")
 
-        self.t_limit_entry = tk.Entry(tab, textvariable=self.t_limit)
-        label_t_limit = tk.Label(tab, text="T Limit")
+        self.t_limit_entry = tk.Entry(input_options_frame, textvariable=self.t_limit)
+        label_t_limit = tk.Label(input_options_frame, text="T Limit")
 
-        self.FPS_entry = tk.Entry(tab, textvariable=self.FPS)
-        label_FPS = tk.Label(tab, text="Frames per second")
+        self.FPS_entry = tk.Entry(input_options_frame, textvariable=self.FPS)
+        label_FPS = tk.Label(input_options_frame, text="Frames per second")
 
         # Sliders for various curve parameters
         self.frequency_slider = tk.Scale(
-            tab,
+            input_options_frame,
             label="Frequency",
             from_=0,
             to=9,
@@ -339,7 +466,7 @@ class InteractiveUserInterface:
         self.frequency_slider.set(1)
 
         self.amplitude_slider = tk.Scale(
-            tab,
+            input_options_frame,
             label="Amplitude",
             from_=-5,
             to=5,
@@ -352,7 +479,7 @@ class InteractiveUserInterface:
         self.amplitude_slider.set(1)
 
         self.phase_slider = tk.Scale(
-            tab,
+            input_options_frame,
             label="Phase",
             from_=0,
             to=2 * np.pi,
@@ -365,7 +492,7 @@ class InteractiveUserInterface:
         self.phase_slider.set(0)
 
         self.gaussian_shift_slider = tk.Scale(
-            tab,
+            input_options_frame,
             label="Center of Gaussian",
             from_=0,
             to=self.x_limit.get(),
@@ -379,7 +506,7 @@ class InteractiveUserInterface:
 
         # Button to update the plot for inputs
         update_plot_button = tk.Button(
-            tab, text="Update Plot", command=self.pack_input_tab_plot
+            input_options_frame, text="Update Plot", command=self.pack_input_tab_plot
         )
 
         # Plot figure
@@ -410,11 +537,14 @@ class InteractiveUserInterface:
         self.amplitude_slider.grid(row=8, column=0, padx=10, columnspan=2)
         self.phase_slider.grid(row=9, column=0, padx=10, columnspan=2)
         self.plot_window.get_tk_widget().grid(
-            row=0, column=2, rowspan=15, sticky="ENWS"
+            row=0, column=1, rowspan=15, sticky="ENWS"
         )
         update_plot_button.grid(row=14, column=0, columnspan=2)
 
-        tab.grid_columnconfigure(2, weight=1)
+        input_options_frame.grid(row=0, column=0, rowspan=15, sticky="NS")
+        tab.grid_columnconfigure(1, weight=1)
+        tab.grid_rowconfigure(0, weight=1)
+        # tab.grid_columnconfigure(0, weight=1)
 
     def numerical_simulation_tab_construction(self, tab):
         """ """
@@ -434,7 +564,11 @@ class InteractiveUserInterface:
             "3rd-order Runge-Kutta",
             "4th-order Runge-Kutta",
         )
-        spatial_discretization_options = ("2nd-order Central Difference",)
+        spatial_discretization_options = (
+            "2nd-order Central Difference",
+            "1st-order upwind method (flux splitting)",
+            "5th-order WENO method (flux splitting)",
+        )
         self.selected_time_integration = tk.StringVar()
         self.selected_time_integration.set("Euler Forward")
         self.selected_spatial_discretization = tk.StringVar()
@@ -541,14 +675,14 @@ class InteractiveUserInterface:
         self.videoplayer.bind("<<SecondChanged>>", self.update_slider)
 
         # Packing widgets
-        tab.rowconfigure([0, 1, 2, 3, 4, 5], minsize=100)
-        tab.columnconfigure([0, 1, 2], minsize=200)
+        tab.rowconfigure(2, minsize=100, weight=1)
+        tab.columnconfigure([0, 1, 2], minsize=200, weight=1)
         label.grid(row=1, column=0, columnspan=3, sticky="ew")
         self.videoplayer.grid(row=2, column=0, rowspan=3, columnspan=3, sticky="nsew")
-        timefromstartlabel.grid(row=5, column=0, padx=10, pady=10)
-        self.slope_slider.grid(row=5, column=1, padx=10, pady=10)
-        totdurationlabel.grid(row=5, column=2, padx=10, pady=10)
-        self.pp_btn.grid(row=6, column=1)
+        timefromstartlabel.grid(row=17, column=0, padx=10, pady=10)
+        self.slope_slider.grid(row=17, column=1, padx=10, pady=10)
+        totdurationlabel.grid(row=17, column=2, padx=10, pady=10)
+        self.pp_btn.grid(row=18, column=1)
 
     # updates current time, used to update slider
     def update_slider(self, event):
@@ -685,6 +819,8 @@ class InteractiveUserInterface:
         }
         spatial_discretization_schemes = {
             "2nd-order Central Difference": centralDiff_Order2,
+            "1st-order upwind method (flux splitting)": upwindDiff_Order1,
+            "5th-order WENO method (flux splitting)": weno5,
         }
 
         fig = SWE_1D(
