@@ -383,23 +383,23 @@ def weno_Interp(f: FArray, stencil: FArray) -> FArray:
     fp2: FArray = f[:,Ip2]
     
     # nonlinear weights
-    IS0: FArray = 13.0 / 12.0 * pow(fm2 - 2.0 * fm1 + fe0, 2) + 1.0 / 4.0 * pow(fm2 - 4.0 * fm1 + 3.0 * fe0, 2);
-    IS1: FArray = 13.0 / 12.0 * pow(fm1 - 2.0 * fe0 + fp1, 2) + 1.0 / 4.0 * pow(fm1 - fp1, 2);
-    IS2: FArray = 13.0 / 12.0 * pow(fe0 - 2.0 * fp1 + fp2, 2) + 1.0 / 4.0 * pow(3.0 * fe0 - 4.0 * fp1 + fp2, 2);
+    IS0: FArray = 13.0 / 12.0 * pow(fm2 - 2.0 * fm1 + fe0, 2) + 1.0 / 4.0 * pow(fm2 - 4.0 * fm1 + 3.0 * fe0, 2)
+    IS1: FArray = 13.0 / 12.0 * pow(fm1 - 2.0 * fe0 + fp1, 2) + 1.0 / 4.0 * pow(fm1 - fp1, 2)
+    IS2: FArray = 13.0 / 12.0 * pow(fe0 - 2.0 * fp1 + fp2, 2) + 1.0 / 4.0 * pow(3.0 * fe0 - 4.0 * fp1 + fp2, 2)
    
     EW: float = 1e-6
-    al0: FArray = 1.0 / 10.0 * pow(1.0 / (EW + IS0), 2);
-    al1: FArray = 6.0 / 10.0 * pow(1.0 / (EW + IS1), 2);
-    al2: FArray = 3.0 / 10.0 * pow(1.0 / (EW + IS2), 2);
+    al0: FArray = 1.0 / 10.0 * pow(1.0 / (EW + IS0), 2)
+    al1: FArray = 6.0 / 10.0 * pow(1.0 / (EW + IS1), 2)
+    al2: FArray = 3.0 / 10.0 * pow(1.0 / (EW + IS2), 2)
     
-    w0: FArray = al0 / (al0 + al1 + al2);
-    w1: FArray = al1 / (al0 + al1 + al2);
-    w2: FArray = al2 / (al0 + al1 + al2);
+    w0: FArray = al0 / (al0 + al1 + al2)
+    w1: FArray = al1 / (al0 + al1 + al2)
+    w2: FArray = al2 / (al0 + al1 + al2)
     
     # interpolated values according to the nonlinear weights
     fp = w0 * (2.0 /6.0 * fm2 - 7.0 / 6.0 * fm1 + 11.0 / 6.0 * fe0) + \
     w1 * (-1.0 / 6.0 * fm1 + 5.0 / 6.0 * fe0 + 2.0 / 6.0 * fp1) + \
-    w2 * (2.0 / 6.0 * fe0 + 5.0 / 6.0 * fp1 - 1.0 / 6.0 * fp2);
+    w2 * (2.0 / 6.0 * fe0 + 5.0 / 6.0 * fp1 - 1.0 / 6.0 * fp2)
 
     return fp
 
