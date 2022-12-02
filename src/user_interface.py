@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib.pylab import close
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from SWE_1D import SWE_1D, inputInitialValue
+from SWE_1D import *
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import math
@@ -669,7 +669,17 @@ class InteractiveUserInterface:
         xArray = np.linspace(-domainLength / 2, domainLength / 2 - dx, xTotalNumber)
         h_i, hu_i = inputInitialValue(xArray, xTotalNumber)
 
-        fig = SWE_1D(dx, xArray, timeLength, xTotalNumber, FPS, h=h_i, hu=hu_i)
+        fig = SWE_1D(
+            dx,
+            xArray,
+            timeLength,
+            xTotalNumber,
+            FPS,
+            eulerForward,
+            centralDiff_Order2,
+            h=h_i,
+            hu=hu_i,
+        )
 
         # make a movie
         moviemake = makemovie(r"output.out", xTotalNumber, domainLength / 2, FPS)
