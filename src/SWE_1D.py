@@ -650,9 +650,9 @@ if __name__ == "__main__":
     
     # Parameters setting
     domainLength: float = 20.0  # meter
-    xTotalNumber: int = 500 #number of divisions
-    timeLength: float = 3.0  # second
-    FPS: int = 1 # frame rate
+    xTotalNumber: int = 100 #number of divisions
+    timeLength: float = 10.0  # second
+    FPS: int = 20 # frame rate
     TI = RK4 # time integration method
     SD = weno5 # space differentiation method
     choice: int = 4; # choice of the initial condition
