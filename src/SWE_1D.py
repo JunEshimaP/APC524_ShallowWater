@@ -278,26 +278,6 @@ def loopIndex(vecf: FArray, deviation: int) -> FArray:
         (deviation >=0) * nums                                   
     return loopindex
 
-
-def centralDiff_Order2(vecu: FArray, dx: float) -> FArray:
-    
-    """
-    Purpose: calculate the difference df/dx using 2nd order central difference
-    Input:
-        -- vecu: an array to be differentiated
-        -- dx: the space distance between grid points
-    Output:
-        -- dfdx: the differentiation of f
-        -- i.e. (f(i+1) - f(i-1)) / (2 * dx)
-    """
-    
-    vecf: FArray = numpy.vstack((vecu[1], (vecu[1]**2) / vecu[0] + 0.5 * g * (vecu[0]**2)))
-    dfdx: FArray = numpy.gradient(vecf, dx, axis=1)
-    dfdx[:,0] = (vecf[:,1] - vecf[:,-1]) / (2.0 * dx)
-    dfdx[:,-1] = (vecf[:,0] - vecf[:,-2]) / (2.0 * dx)
-    return dfdx
-
-
 def upwind_Interp(f: FArray, stencil: int) -> FArray:
     
     """
@@ -348,7 +328,23 @@ def upwindDiff_Order1(vecu: FArray, dx: float) -> FArray:
     dfdx: FArray = (dfpdx + dfmdx)
     return dfdx
 
-
+def centralDiff_Order2(vecu: FArray, dx: float) -> FArray:
+    
+    """
+    Purpose: calculate the difference df/dx using 2nd order central difference
+    Input:
+        -- vecu: an array to be differentiated
+        -- dx: the space distance between grid points
+    Output:
+        -- dfdx: the differentiation of f
+        -- i.e. (f(i+1) - f(i-1)) / (2 * dx)
+    """
+    
+    vecf: FArray = numpy.vstack((vecu[1], (vecu[1]**2) / vecu[0] + 0.5 * g * (vecu[0]**2)))
+    dfdx: FArray = numpy.gradient(vecf, dx, axis=1)
+    dfdx[:,0] = (vecf[:,1] - vecf[:,-1]) / (2.0 * dx)
+    dfdx[:,-1] = (vecf[:,0] - vecf[:,-2]) / (2.0 * dx)
+    return dfdx
 
 def weno_Interp(f: FArray, stencil: FArray) -> FArray:
     
