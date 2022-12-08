@@ -395,7 +395,7 @@ class InteractiveUserInterface:
         paragraph_output = "The output tab allows the user to view a movie of the evolution of their wave in time."
         # TODO: "edit these equations to be 1D"
         image_equations = ImageTk.PhotoImage(
-            Image.open("swe_math.png").resize((400, 200), Image.LANCZOS)
+            Image.open("swe_math_1D.png").resize((400, 200), Image.LANCZOS)
         )
         image_schematic = ImageTk.PhotoImage(
             Image.open("system_schematic.png").resize((400, 200), Image.LANCZOS)
@@ -459,15 +459,28 @@ class InteractiveUserInterface:
         label_equations = tk.Label(grouped_frame)
         label_equations.image = image_equations
         label_equations.configure(image=image_equations)
+        caption_equations = tk.Label(
+            grouped_frame,
+            text="1D shallow water wave equations",
+            font=("Sans Serif", 10),
+        )
+
         label_schematic = tk.Label(grouped_frame)
         label_schematic.image = image_schematic
         label_schematic.configure(image=image_schematic)
+        caption_schematic = tk.Label(
+            grouped_frame,
+            text="Schematic of 1D shallow water wave system (via Wikipedia user Maistral01 under (CC BY-SA 4.0)",
+            font=("Sans Serif", 10),
+        )
 
         header_title.grid(row=0, column=0, columnspan=2)
         body_1.grid(row=1, column=0, columnspan=2)
         body_2.grid(row=2, column=0, columnspan=2)
         label_equations.grid(row=3, column=0)
         label_schematic.grid(row=3, column=1)
+        caption_equations.grid(row=4, column=0)
+        caption_schematic.grid(row=4, column=1)
         tab_description_title.grid(row=5, column=0, columnspan=2)
         body_3.grid(row=6, column=0, columnspan=2)
         input_title.grid(row=7, column=0, sticky="W")
@@ -501,7 +514,7 @@ class InteractiveUserInterface:
             tk.Entry() instances to allow for user entering of the domain length, number of discretizations in space,
             the length of simulation time, and output video FPS desired, respectively
 
-        self.frequency_slider, self.amplitude_slider, self.phase_slider, and self.gaussian_shift_slider:
+        self.frequency_slider, self.amplitude_slider, and self.gaussian_shift_slider:
             tk.Scale() instances to create sliders for the user to adjust the frequency and phase of the sinusoids input,
             the amplitude of either curve, and the center of the Gaussian hump. The scales automatically update the plotting
             window when interacted with
@@ -537,7 +550,7 @@ class InteractiveUserInterface:
         self.FPS = tk.IntVar()
         self.totduration = tk.IntVar()
 
-        self.x_limit.set(10)
+        self.x_limit.set(20)
         self.nx.set(100)
         self.t_limit.set(10)
         self.FPS.set(30)
@@ -558,21 +571,21 @@ class InteractiveUserInterface:
         self.frequency_slider = tk.Scale(
             input_options_frame,
             label="Frequency",
-            from_=0,
+            from_=1,
             to=9,
             digits=2,
-            resolution=0.1,
+            resolution=1,
             command=self.update_plot,
             orient=tk.HORIZONTAL,
             length=300,
         )
-        self.frequency_slider.set(1)
+        self.frequency_slider.set(3)
 
         self.amplitude_slider = tk.Scale(
             input_options_frame,
             label="Amplitude",
-            from_=-5,
-            to=5,
+            from_=-1,
+            to=1,
             digits=2,
             resolution=0.1,
             command=self.update_plot,
@@ -580,19 +593,6 @@ class InteractiveUserInterface:
             length=300,
         )
         self.amplitude_slider.set(1)
-
-        self.phase_slider = tk.Scale(
-            input_options_frame,
-            label="Phase",
-            from_=0,
-            to=2 * np.pi,
-            digits=3,
-            resolution=0.05,
-            command=self.update_plot,
-            orient=tk.HORIZONTAL,
-            length=300,
-        )
-        self.phase_slider.set(0)
 
         self.gaussian_shift_slider = tk.Scale(
             input_options_frame,
@@ -615,10 +615,15 @@ class InteractiveUserInterface:
         # Plot figure
         self.fig = Figure()
         self.ax = self.fig.add_subplot(111)
-        i = np.linspace(0, 10, 100)
-        (self.curve,) = self.ax.plot(i, [np.sin(x) for x in i])
-        (self.baseline,) = self.ax.plot([0, self.x_limit.get()], [0, 0], "r:")
-        self.ax.set_xlim([0, 10])
+        x = np.linspace(-self.x_limit.get() / 2, self.x_limit.get() / 2, 100)
+        (self.curve,) = self.ax.plot(x, x)
+        self.curve.set_ydata(
+            [(1 + np.sin(2 * np.pi * element / self.x_limit.get())) for element in x]
+        )
+        (self.baseline,) = self.ax.plot(
+            [-self.x_limit.get() / 2, self.x_limit.get() / 2], [1, 1], "r:"
+        )
+        self.ax.set_xlim([-self.x_limit.get() / 2, self.x_limit.get() / 2])
         self.ax.set_ylim([-5, 5])
         self.ax.set_xlabel("Simulation Domain (x) [m]")
         self.ax.set_ylabel("Water Height (h) [m]")
@@ -638,7 +643,6 @@ class InteractiveUserInterface:
         input_shape_menu.grid(row=6, column=1, padx=10)
         self.frequency_slider.grid(row=7, column=0, padx=10, columnspan=2)
         self.amplitude_slider.grid(row=8, column=0, padx=10, columnspan=2)
-        self.phase_slider.grid(row=9, column=0, padx=10, columnspan=2)
         self.plot_window.get_tk_widget().grid(
             row=0, column=1, rowspan=15, sticky="ENWS"
         )
@@ -859,35 +863,41 @@ class InteractiveUserInterface:
         curve_type = self.selected_input_shape.get()
         (x, y) = self.curve.get_data()
 
-        if len(x) != self.nx.get() or max(x) != self.x_limit.get():
-            x = np.linspace(0, self.x_limit.get(), self.nx.get())
+        if len(x) != self.nx.get() or max(x) != self.x_limit.get() / 2:
+            x = np.linspace(
+                -self.x_limit.get() / 2, self.x_limit.get() / 2, self.nx.get()
+            )
             self.curve.set_xdata(x)
-            self.ax.set_xlim((0, self.x_limit.get()))
+            self.ax.set_xlim((-self.x_limit.get() / 2, self.x_limit.get() / 2))
 
         if curve_type == "Sinusoid":
             self.gaussian_shift_slider.grid_forget()
             self.frequency_slider.grid(row=7, column=0, padx=10, columnspan=2)
-            self.phase_slider.grid(row=9, column=0, padx=10, columnspan=2)
 
             amplitude = self.amplitude_slider.get()
             frequency = self.frequency_slider.get()
-            phase = self.phase_slider.get()
             self.curve.set_ydata(
-                [(amplitude * np.sin(frequency * element - phase)) for element in x]
+                [
+                    (
+                        amplitude
+                        * np.sin(frequency * 2 * np.pi * element / self.x_limit.get())
+                    )
+                    + 1
+                    for element in x
+                ]
             )
 
         elif curve_type == "Gaussian":
             self.frequency_slider.grid_forget()
-            self.phase_slider.grid_forget()
             self.gaussian_shift_slider.grid(row=7, column=0, columnspan=2, padx=20)
 
             shift = self.gaussian_shift_slider.get()
             amplitude = self.amplitude_slider.get()
             self.curve.set_ydata(
-                [amplitude * np.exp(-1.0 * (element - shift) ** 2) for element in x]
+                [amplitude * np.exp(-1.0 * (element - shift) ** 2) + 1 for element in x]
             )
 
-        self.baseline.set_xdata([0, self.x_limit.get()])
+        self.baseline.set_xdata([-self.x_limit.get() / 2, self.x_limit.get() / 2])
         self.plot_window.draw()
 
     def update_plot(self, event):
@@ -904,9 +914,15 @@ class InteractiveUserInterface:
             x, y = self.curve.get_data()
             amplitude = self.amplitude_slider.get()
             frequency = self.frequency_slider.get()
-            phase = self.phase_slider.get()
             self.curve.set_ydata(
-                [(amplitude * np.sin(frequency * i - phase)) for i in x]
+                [
+                    (
+                        1
+                        + amplitude
+                        * np.sin(2 * np.pi * i * frequency / self.x_limit.get())
+                    )
+                    for i in x
+                ]
             )
             self.plot_window.draw()
 
@@ -915,7 +931,7 @@ class InteractiveUserInterface:
             amplitude = self.amplitude_slider.get()
             shift = self.gaussian_shift_slider.get()
             self.curve.set_ydata(
-                [amplitude * np.exp(-1.0 * (element - shift) ** 2) for element in x]
+                [amplitude * np.exp(-1.0 * (element - shift) ** 2) + 1 for element in x]
             )
 
             self.plot_window.draw()
