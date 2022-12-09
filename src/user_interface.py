@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter.scrolledtext import ScrolledText
 import numpy as np
 from matplotlib.pylab import close
 from matplotlib.figure import Figure
@@ -11,6 +12,8 @@ import math
 from tkVideoPlayer import *
 from pathlib import Path
 from PIL import ImageTk, Image
+import sys
+import os
 
 
 class makemovie:
@@ -169,7 +172,7 @@ class makemovie:
         not look verty shallow).
 
         """
-        self.plottedgraphfigax.set_xlim(0, self.xlim)
+        self.plottedgraphfigax.set_xlim(-self.xlim, self.xlim)
         self.plottedgraphfigax.set_ylim(0, 2)
         return (self.curve,)
 
@@ -252,6 +255,48 @@ class makemovie:
             Path("src/sample_movies/sample_generated.mp4"), writer=writervideo
         )
         print("Movie Made")
+
+
+class PrintLogger:
+    """
+    Generates a logging object so that console output may be redirected to the applet window.
+    This class was in large part gathered from StackOverflow: https://stackoverflow.com/questions/68198575/how-can-i-displaymy-console-output-in-tkinter
+
+    Input
+    -----
+    textbox : a tk.ScrolledText() instance
+        This class uses a ScrolledText() instance to mimic the behavior of a console
+
+    Methods
+    -------
+    __init__ :
+        safes the textbox input as a public reference for the class
+
+    write :
+        handles the outputting of the text to the console
+
+    flush :
+        allows the object to behave like a file
+    """
+
+    def __init__(self, textbox):
+        self.textbox = textbox
+
+    def write(self, text):
+        """
+        In order of lines, this method:
+        1. makes the textbox editable
+        2. inserts the text to the end of the textbox
+        3. scrolls the textbox to the end of the statement
+        4. sets the textbox to be read-only
+        """
+        self.textbox.configure(state="normal")
+        self.textbox.insert("end", text)
+        self.textbox.see("end")
+        self.textbox.configure(state="disabled")
+
+    def flush(self):
+        pass
 
 
 class InteractiveUserInterface:
@@ -535,7 +580,7 @@ class InteractiveUserInterface:
             "Gaussian",
         )
         self.selected_input_shape = tk.StringVar()
-        self.selected_input_shape.set("Sinusoid")
+        self.selected_input_shape.set("Gaussian")
         input_shape_menu = tk.OptionMenu(
             input_options_frame, self.selected_input_shape, *input_curve_options
         )
@@ -556,13 +601,15 @@ class InteractiveUserInterface:
         self.FPS.set(30)
 
         self.x_limit_entry = tk.Entry(input_options_frame, textvariable=self.x_limit)
-        label_x_limit = tk.Label(input_options_frame, text="X Limit")
+        label_x_limit = tk.Label(input_options_frame, text="Domain Width (x) [m]")
 
         self.nx_entry = tk.Entry(input_options_frame, textvariable=self.nx)
         label_nx = tk.Label(input_options_frame, text="Number of Points in X")
 
         self.t_limit_entry = tk.Entry(input_options_frame, textvariable=self.t_limit)
-        label_t_limit = tk.Label(input_options_frame, text="T Limit")
+        label_t_limit = tk.Label(
+            input_options_frame, text="Length of Simulation (t) [s]"
+        )
 
         self.FPS_entry = tk.Entry(input_options_frame, textvariable=self.FPS)
         label_FPS = tk.Label(input_options_frame, text="Frames per second")
@@ -584,8 +631,8 @@ class InteractiveUserInterface:
         self.amplitude_slider = tk.Scale(
             input_options_frame,
             label="Amplitude",
-            from_=-1,
-            to=1,
+            from_=-0.5,
+            to=0.5,
             digits=2,
             resolution=0.1,
             command=self.update_plot,
@@ -597,8 +644,8 @@ class InteractiveUserInterface:
         self.gaussian_shift_slider = tk.Scale(
             input_options_frame,
             label="Center of Gaussian",
-            from_=0,
-            to=self.x_limit.get(),
+            from_=-self.x_limit.get() / 2,
+            to=self.x_limit.get() / 2,
             digits=3,
             resolution=0.1,
             command=self.update_plot,
@@ -629,6 +676,22 @@ class InteractiveUserInterface:
         self.ax.set_ylabel("Water Height (h) [m]")
         self.plot_window = FigureCanvasTkAgg(self.fig, master=tab)
 
+        # Console logging
+        self.input_console_logger = ScrolledText(
+            input_options_frame, height=5, width=80, font=("Consolas", 12, "normal")
+        )
+        logging = PrintLogger(self.input_console_logger)
+        sys.stdout = logging
+        sys.stderr = logging
+
+        # Button to clear the console
+        clear_console_button = tk.Button(
+            input_options_frame,
+            text="Clear Console",
+            # )
+            command=self.clear_console_input,
+        )
+
         # Packing, only packs the initial widgets used for the sinusoidal input (default)
         self.x_limit_entry.grid(row=0, column=1, padx=5)
         label_x_limit.grid(row=0, column=0)
@@ -641,12 +704,14 @@ class InteractiveUserInterface:
 
         label_input_shape_menu.grid(row=6, column=0)
         input_shape_menu.grid(row=6, column=1, padx=10)
-        self.frequency_slider.grid(row=7, column=0, padx=10, columnspan=2)
+        self.gaussian_shift_slider.grid(row=7, column=0, padx=10, columnspan=2)
         self.amplitude_slider.grid(row=8, column=0, padx=10, columnspan=2)
         self.plot_window.get_tk_widget().grid(
             row=0, column=1, rowspan=15, sticky="ENWS"
         )
-        update_plot_button.grid(row=14, column=0, columnspan=2)
+        update_plot_button.grid(row=14, column=0, columnspan=1)
+        clear_console_button.grid(row=14, column=1)
+        self.input_console_logger.grid(row=15, column=0, columnspan=2, rowspan=10)
 
         input_options_frame.grid(row=0, column=0, rowspan=15, sticky="NS")
         tab.grid_columnconfigure(1, weight=1)
@@ -706,6 +771,22 @@ class InteractiveUserInterface:
             tab, text="Select the method for spatial discretization:"
         )
 
+        # Console logging
+        self.numerical_console_logger = ScrolledText(
+            tab, height=20, width=50, font=("Consolas", 12, "normal")
+        )
+        logging = PrintLogger(self.numerical_console_logger)
+        sys.stdout = logging
+        sys.stderr = logging
+
+        # Button to clear the console
+        clear_console_button = tk.Button(
+            tab,
+            text="Clear Console",
+            # )
+            command=self.clear_console_numerical,
+        )
+
         # Packing widgets
         run_default_simulation_button.grid(row=0, column=0, columnspan=2)
         run_custom_simulation_buttom.grid(row=1, column=0, columnspan=2)
@@ -714,6 +795,9 @@ class InteractiveUserInterface:
         time_integration_menu.grid(row=3, column=0, columnspan=2)
         label_discretization_menu.grid(row=4, column=0, columnspan=2)
         spatial_discretization_menu.grid(row=5, column=0, columnspan=2)
+
+        clear_console_button.grid(row=6, column=0, columnspan=2)
+        self.numerical_console_logger.grid(row=7, column=0, columnspan=2)
 
     def output_tab_construction(self, tab):
         """
@@ -863,9 +947,36 @@ class InteractiveUserInterface:
         curve_type = self.selected_input_shape.get()
         (x, y) = self.curve.get_data()
 
+        # Error Catching
+        try:
+            self.x_limit.get()
+        except:
+            raise Exception(
+                "Please input a floating point number for the 'Domain Width' field"
+            )
+
+        try:
+            self.nx.get()
+        except:
+            raise Exception(
+                "Please input a floating point number for the 'Number of Points in X' field"
+            )
+
+        try:
+            self.t_limit.get()
+        except:
+            raise Exception(
+                "Please input a floating point number for the 'Simulation Length' field"
+            )
+
+        try:
+            self.FPS.get()
+        except:
+            raise Exception("Please input a floating point number for 'FPS' field")
+
         if len(x) != self.nx.get() or max(x) != self.x_limit.get() / 2:
             x = np.linspace(
-                -self.x_limit.get() / 2, self.x_limit.get() / 2, self.nx.get()
+                -self.x_limit.get() / 2, self.x_limit.get() / 2, np.round(self.nx.get())
             )
             self.curve.set_xdata(x)
             self.ax.set_xlim((-self.x_limit.get() / 2, self.x_limit.get() / 2))
@@ -899,6 +1010,17 @@ class InteractiveUserInterface:
 
         self.baseline.set_xdata([-self.x_limit.get() / 2, self.x_limit.get() / 2])
         self.plot_window.draw()
+
+    # These are separate functions due to the inability to pass the tk.ScrolledText() objects as function parameters and achieve stable behavior here
+    def clear_console_input(self):
+        self.input_console_logger.configure(state="normal")
+        self.input_console_logger.delete(1.0, tk.END)
+        self.input_console_logger.configure(state="disabled")
+
+    def clear_console_numerical(self):
+        self.numerical_console_logger.configure(state="normal")
+        self.numerical_console_logger.delete(1.0, tk.END)
+        self.numerical_console_logger.configure(state="disabled")
 
     def update_plot(self, event):
         """
@@ -965,7 +1087,7 @@ class InteractiveUserInterface:
         self.totduration = time_length
 
         hu_i = np.zeros(np.shape(x))
-        h_i = np.array(h_i) + 1
+        h_i = np.array(h_i)
         x = np.array(x)
 
         dx = self.x_limit.get() / nx
@@ -991,6 +1113,7 @@ class InteractiveUserInterface:
             FPS,
             time_integration_schemes[self.selected_time_integration.get()],
             spatial_discretization_schemes[self.selected_spatial_discretization.get()],
+            1,
             h=h_i,
             hu=hu_i,
         )
@@ -1040,7 +1163,7 @@ class InteractiveUserInterface:
 
         dx: float = domainLength / xTotalNumber
         xArray = np.linspace(-domainLength / 2, domainLength / 2 - dx, xTotalNumber)
-        h_i, hu_i = inputInitialValue(xArray, xTotalNumber)
+        h_i, hu_i = inputInitialValue(xArray, xTotalNumber, 1)
 
         fig = SWE_1D(
             dx,
@@ -1050,6 +1173,7 @@ class InteractiveUserInterface:
             FPS,
             eulerForward,
             centralDiff_Order2,
+            1,
             h=h_i,
             hu=hu_i,
         )
