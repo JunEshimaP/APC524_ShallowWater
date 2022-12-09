@@ -15,7 +15,7 @@ Boundary conditions:
     Periodic
 
 Initial conditions:
-    Gaussian hump 1 + 0.4 exp(-x*x)
+    Gaussian hump 1 + 0.3 exp(-x*x)
     zero velocity
 
 Domain:
@@ -30,9 +30,9 @@ Duration:
     T=10
 
 Temporal discretisation:
-    Dt = 0.01 * dx / sqrt(g * 2)
-    [this is subtly different from the user_interface since we replaced h.max with 2
-    but there's no real difference.]
+    Dt = 0.0001 * dx / sqrt(g * 2)
+    [this is different from the user_interface since we replaced h.max with 2
+    and the pre-factor is much smaller]
 
 We use explicit forward Euler
 
@@ -65,10 +65,10 @@ int N = 100;
 double Dx = 2.0 * halfL / N;
 
 // total duration
-double T = 10;
+double T = 10.0;
 
-// temporal discretisation
-double Dt = 0.01 * Dx / sqrt(g * 2);
+// temporal discretisation (take very fine)
+double Dt = 0.0001 * Dx / sqrt(g * 2);
 
 // number of time loops
 int M = floor(T / Dt);
@@ -109,9 +109,9 @@ int main()
     {
         // initialise with gaussians for heights
         x.push_back(Dx * i - 10.0);
-        h.push_back(1 + 0.4 * exp(-x[i] * x[i]));
+        h.push_back(1 + 0.3 * exp(-x[i] * x[i]));
         hu.push_back(0.0);
-        newh.push_back(1 + 0.4 * exp(-x[i] * x[i]));
+        newh.push_back(1 + 0.3 * exp(-x[i] * x[i]));
         newhu.push_back(0.0);
     }
 

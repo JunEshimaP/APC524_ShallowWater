@@ -4,3 +4,4 @@ pytest
 scipy
 tk
 tkVideoPlayer
+pillow
