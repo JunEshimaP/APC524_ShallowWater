@@ -1,5 +1,5 @@
 """
-Script to plot the output from c++ file 
+Script to plot the output from c++ file
 (the default set up - see SWE_1D.cpp/SWE_1D.py)
 
 Uses matplotlib, deliberately made similar to moviemake class

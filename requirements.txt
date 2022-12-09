@@ -1,7 +1,7 @@
 matplotlib
 numpy
+pillow
 pytest
 scipy
 tk
 tkVideoPlayer
-pillow
