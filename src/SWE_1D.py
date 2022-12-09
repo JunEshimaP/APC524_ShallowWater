@@ -159,7 +159,7 @@ FArray = NDArray[numpy.float64]
 
 
 def inputInitialValue(
-    xArray: FArray, xTotalNumber: int, choice: int = 4
+    xArray: FArray, xTotalNumber: int, choice: int
 ) -> tuple[FArray, FArray]:
 
     """
