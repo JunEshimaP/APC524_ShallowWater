@@ -13,7 +13,6 @@ from tkVideoPlayer import *
 from pathlib import Path
 from PIL import ImageTk, Image
 import sys
-import os
 
 
 class makemovie:

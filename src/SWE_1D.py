@@ -682,9 +682,9 @@ if __name__ == "__main__":
     )  # x coordinates of grid points
     timeLength: float = 10.0  # second
     FPS: int = 20  # frame rate
-    TI = RK4  # time integration method
-    SD = weno5  # space differentiation method
-    choice: int = 4
+    TI = eulerForward  # time integration method
+    SD = centralDiff_Order2  # space differentiation method
+    choice: int = 1
     # choice of the initial condition
 
     # run the simulation
