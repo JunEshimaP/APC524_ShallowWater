@@ -1,33 +1,29 @@
 # APC524_ShallowWater
 This document is an overview document. Each program has more detailed in-program documentation.
-Overall, the program has four main components. The user interface, the numerical solver, the movie maker and the output.
+The app has three tabs (and an introduction tab). The user interface, the numerical solver and the output.
 
-## User Interface
-+ Allows the user to choose the numerical scheme
+## Input
++ Allows the user to choose the domain
 + Allows the user to choose the FPS
 + Allows the user to choose the initial condition
 + Has some sample initial conditions
 + Uses tkinter mainly
 
-## 1D shallow water solver
-+ Time: Euler forward
-+ Space: 2nd order central difference
-+ Initial shape: gaussian hump
-+ Boundary contion: periodic
+## Numerical Simulation
++ Solves the shallow water wave equations using user specified numerical schemes
++ User can choose the time integration method and the spatial integration method
 + Sample results:
 ![1Dwaves](https://user-images.githubusercontent.com/112533493/199803223-45be82d2-bd81-461a-851e-1a0bfc35f79d.png)
 
-## Movie Maker
+## Output
 + Takes in the output of the 1D shallow water solver to make a mp4 file
 + Note: ffmpeg needs to be installed in order for this to run
-
-## Output
 + Plays the output movie
 + Includes interactive progress bar, play/pause button and more
 + Uses tkinter and tkVideoPlayer mainly
 
 ## Automated Testing
-We did not include tests for certain parts of the code such as output.py since this was about configuring the set up (i.e. TKinter things) rather than computing anything.
+There are two test files: test_SWE_1D_cpp.py and test_SWE_1D.py. Checks for standard things such as correct output format etc. In addition, checks against benchmarks created via a working previous version and a separate c++ version. 
 
 ## Miscellaneous files
 ### Pre-Commit
