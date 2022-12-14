@@ -514,17 +514,17 @@ class InteractiveUserInterface:
         label_schematic.configure(image=image_schematic)
         caption_schematic = tk.Label(
             grouped_frame,
-            text="Schematic of 1D shallow water wave system (via Wikipedia user Maistral01 under (CC BY-SA 4.0)",
+            text="Schematic of 1D shallow water wave system (via Wikipedia user Maistral01 under (CC BY-SA 4.0))",
             font=("Sans Serif", 10),
         )
 
         header_title.grid(row=0, column=0, columnspan=2)
         body_1.grid(row=1, column=0, columnspan=2)
         body_2.grid(row=2, column=0, columnspan=2)
-        label_equations.grid(row=3, column=0)
-        label_schematic.grid(row=3, column=1)
-        caption_equations.grid(row=4, column=0)
-        caption_schematic.grid(row=4, column=1)
+        label_equations.grid(row=3, column=0, sticky="EW")
+        label_schematic.grid(row=3, column=1, sticky="EW")
+        caption_equations.grid(row=4, column=0, sticky="EW")
+        caption_schematic.grid(row=4, column=1, sticky="EW")
         tab_description_title.grid(row=5, column=0, columnspan=2)
         body_3.grid(row=6, column=0, columnspan=2)
         input_title.grid(row=7, column=0, sticky="W")
@@ -536,6 +536,7 @@ class InteractiveUserInterface:
 
         grouped_frame.grid(row=0, column=0, sticky="EWNS")
         grouped_frame.grid_columnconfigure(0, weight=1)
+        grouped_frame.grid_columnconfigure(1, weight=1)
 
         tab.grid_rowconfigure(0, weight=1)
         tab.grid_columnconfigure(0, weight=1)
@@ -670,7 +671,7 @@ class InteractiveUserInterface:
             [-self.x_limit.get() / 2, self.x_limit.get() / 2], [1, 1], "r:"
         )
         self.ax.set_xlim([-self.x_limit.get() / 2, self.x_limit.get() / 2])
-        self.ax.set_ylim([-5, 5])
+        self.ax.set_ylim([0, 3])
         self.ax.set_xlabel("Simulation Domain (x) [m]")
         self.ax.set_ylabel("Water Height (h) [m]")
         self.plot_window = FigureCanvasTkAgg(self.fig, master=tab)
@@ -679,9 +680,7 @@ class InteractiveUserInterface:
         self.input_console_logger = ScrolledText(
             input_options_frame, height=5, width=80, font=("Consolas", 12, "normal")
         )
-        logging = PrintLogger(self.input_console_logger)
-        sys.stdout = logging
-        sys.stderr = logging
+        self.logging_input = PrintLogger(self.input_console_logger)
 
         # Button to clear the console
         clear_console_button = tk.Button(
@@ -774,9 +773,7 @@ class InteractiveUserInterface:
         self.numerical_console_logger = ScrolledText(
             tab, height=20, width=50, font=("Consolas", 12, "normal")
         )
-        logging = PrintLogger(self.numerical_console_logger)
-        sys.stdout = logging
-        sys.stderr = logging
+        self.output_logging = PrintLogger(self.numerical_console_logger)
 
         # Button to clear the console
         clear_console_button = tk.Button(
@@ -945,6 +942,8 @@ class InteractiveUserInterface:
         # Shared initialization
         curve_type = self.selected_input_shape.get()
         (x, y) = self.curve.get_data()
+        sys.stdout = self.logging_input
+        sys.stderr = self.logging_input
 
         # Error Catching
         try:
@@ -1079,6 +1078,10 @@ class InteractiveUserInterface:
         time_integration_schemes and spatial discretization_schemes:
             dictionaries that connect the user-selected numerical schemes to the methods within SWE_1D.py
         """
+        # logging
+        sys.stdout = self.output_logging
+        sys.stderr = self.output_logging
+
         # Execute 1D shallow water wave equations
         x, h_i = self.curve.get_data()
         nx = self.nx.get()
@@ -1155,6 +1158,11 @@ class InteractiveUserInterface:
         hu_i:
             the velocity of the weight at a point in x
         """
+
+        # logging
+        sys.stdout = self.output_logging
+        sys.stderr = self.output_logging
+
         domainLength: float = 20.0  # meter
         xTotalNumber: int = 100
         timeLength: float = 10.0  # second
