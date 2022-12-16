@@ -1,6 +1,9 @@
 # APC524_ShallowWater
 This document is an overview document. Each program has more detailed in-program documentation.
 The app has three tabs (and an introduction tab). The user interface, the numerical solver and the output.
+To run the app, simply execute the user_interface.py file:
+
+`python src/user_interface.py`
 
 ## Input
 + Allows the user to choose the domain
